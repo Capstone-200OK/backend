@@ -1,18 +1,23 @@
 package com.example.demo.controller;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.example.demo.entity.User;
+import com.example.demo.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
-@RestController
-@RequestMapping("/user")
+@Controller
+@RequiredArgsConstructor
+@RequestMapping("/users")
 public class UserController {
+    final private UserService userService;
     @PostMapping("/login")
-    String login() {
-        return "success";
+    public ResponseEntity<Boolean> login(@RequestParam String email, @RequestParam String password) {
+        return ResponseEntity.ok(userService.login(email, password));
     }
     @PostMapping("/signup")
-    String signup() {
-        return "success";
+    public ResponseEntity<User> signup(@RequestBody User user) {
+        return ResponseEntity.ok(userService.signup(user));
     }
 }
