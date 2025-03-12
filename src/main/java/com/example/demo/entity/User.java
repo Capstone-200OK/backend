@@ -36,7 +36,7 @@ public class User implements UserDetails {
     private Timestamp updatedAt;
 
 
-    public static User fromUserDTO(UserDTO userDTO) {
+    public static User fromDTO(UserDTO userDTO) {
         return User.builder()
                 .id(userDTO.getId())
                 .email(userDTO.getEmail())
