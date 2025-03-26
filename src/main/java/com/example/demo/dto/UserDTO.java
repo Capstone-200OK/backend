@@ -8,16 +8,7 @@ import lombok.Getter;
 @Data
 @Builder
 public class UserDTO {
-    private Long id;
     private String email;
     private String nickname;
     private String password;
-
-    static public UserDTO fromEntity(User user) {
-        return UserDTO.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .nickname(user.getNickName())
-                .build();
-    }
 }

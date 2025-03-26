@@ -35,16 +35,6 @@ public class User implements UserDetails {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
-
-    public static User fromDTO(UserDTO userDTO) {
-        return User.builder()
-                .id(userDTO.getId())
-                .email(userDTO.getEmail())
-                .nickName(userDTO.getNickname())
-                .password(userDTO.getPassword())
-                .build();
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("user"));
