@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController  // Controller → RestController 변경 (JSON 반환)
 @RequiredArgsConstructor
-@RequestMapping("/scheduledTasks")
+@RequestMapping("/scheduledTask")
 public class ScheduledTaskController {
     private final ScheduledTaskService scheduledTaskService;
 
