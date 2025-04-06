@@ -45,4 +45,7 @@ public class File {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
 }
