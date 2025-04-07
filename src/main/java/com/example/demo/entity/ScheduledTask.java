@@ -26,7 +26,7 @@ public class ScheduledTask {
     private Folder folder;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "`interval`", nullable = false)
     private ScheduleInterval interval;
 
     private Timestamp lastExecuted;

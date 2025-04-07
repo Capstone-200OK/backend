@@ -5,6 +5,7 @@ import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +15,5 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
 
     // 2) 부모가 null인 폴더를 찾기 위한 별도 메서드 (루트 폴더용)
     Optional<Folder> findByNameAndParentFolderIsNullAndUser(String name, User user);
+    List<Folder> findByParentFolderId(Long parentFolderId);
 }

@@ -36,4 +36,7 @@ public class Folder {
 
     @CreationTimestamp
     private Timestamp createdAt;
+
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted;
 }
