@@ -15,7 +15,18 @@ import org.springframework.web.bind.annotation.RestController;
 public class FileController {
     private final FileService fileService;
     @PostMapping("/upload")
-    public File uploadFile(@RequestBody FileRequestDTO fileRequestDTO) {
-        return fileService.uploadFile(fileRequestDTO);
+    public FileDTO uploadFile(@RequestBody FileRequestDTO fileRequestDTO) {
+        File file = fileService.uploadFile(fileRequestDTO);
+        return FileDTO.fromEntity(file);
+    }
+
+    public record FileDTO(Long id, String name, Long folderId) {
+        public static FileDTO fromEntity(File file) {
+            return new FileDTO(
+                    file.getId(),
+                    file.getName(),
+                    file.getFolder() == null ? null : file.getFolder().getId()
+            );
+        }
     }
 }
