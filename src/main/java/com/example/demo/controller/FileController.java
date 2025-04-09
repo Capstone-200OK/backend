@@ -20,6 +20,11 @@ public class FileController {
         return FileDTO.fromEntity(file);
     }
 
+    @PostMapping("/update")
+    public void updateFile(@RequestBody FileRequestDTO fileRequestDTO) {
+
+    }
+
     public record FileDTO(Long id, String name, Long folderId) {
         public static FileDTO fromEntity(File file) {
             return new FileDTO(
