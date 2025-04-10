@@ -1,7 +1,5 @@
-package com.example.demo.dto;
+package com.example.demo.dto.folderDTO;
 
-import com.example.demo.entity.Folder;
-import com.example.demo.entity.User;
 import lombok.Data;
 
 @Data

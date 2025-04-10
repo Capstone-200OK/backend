@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.FolderRequestDTO;
+import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;

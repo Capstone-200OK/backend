@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.FolderRequestDTO;
+import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.User;
 import com.example.demo.repository.FolderRepository;

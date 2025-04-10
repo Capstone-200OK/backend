@@ -1,6 +1,8 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.FileRequestDTO;
+import com.example.demo.dto.fileDTO.FileRequestDTO;
+import com.example.demo.dto.fileDTO.MoveRequestDTO;
+import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.service.FileService;
 import lombok.RequiredArgsConstructor;
@@ -20,10 +22,22 @@ public class FileController {
         return FileDTO.fromEntity(file);
     }
 
-    @PostMapping("/update")
-    public void updateFile(@RequestBody FileRequestDTO fileRequestDTO) {
-
+    @PostMapping("/rename")
+    public void renameFile(@RequestBody RenameRequestDTO renameRequestDTO) {
+        fileService.renameFile(renameRequestDTO);
     }
+
+    @PostMapping("/move")
+    public void moveFile(@RequestBody MoveRequestDTO moveRequestDTO) {
+        fileService.moveFile(moveRequestDTO);
+    }
+
+/*    @PostMapping("/delete")
+    public void deleteFile(@RequestBody DeleteRequestDTO deleteRequestDTO) {
+        fileService.deleteFile(deleteRequestDTO);
+    }*/
+
+
 
     public record FileDTO(Long id, String name, Long folderId) {
         public static FileDTO fromEntity(File file) {

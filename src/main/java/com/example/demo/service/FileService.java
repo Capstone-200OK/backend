@@ -1,6 +1,9 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.FileRequestDTO;
+import com.example.demo.dto.fileDTO.DeleteRequestDTO;
+import com.example.demo.dto.fileDTO.FileRequestDTO;
+import com.example.demo.dto.fileDTO.MoveRequestDTO;
+import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.User;
@@ -38,4 +41,25 @@ public class FileService {
 
         return fileRepository.save(file);
     }
+    @Transactional
+    public void moveFile(MoveRequestDTO moveRequestDTO) {
+        File file = fileRepository.findById(moveRequestDTO.getFileId())
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+        file.setFilePath(moveRequestDTO.getFilePath());
+        file.setFolder(folderRepository.findById(moveRequestDTO.getFolderId()).
+                orElseThrow(() -> new IllegalArgumentException("Folder not found")));
+    }
+    @Transactional
+    public void renameFile(RenameRequestDTO renameRequestDTO) {
+        File file = fileRepository.findById(renameRequestDTO.getFileId())
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+        file.setName(renameRequestDTO.getNewName());
+        file.setFilePath(renameRequestDTO.getNewFilePath());
+    }
+/*    @Transactional
+    public void deleteFile(DeleteRequestDTO deleteRequestDTO) {
+        File file = fileRepository.findById(deleteRequestDTO.getFileId())
+                .orElseThrow(() -> new IllegalArgumentException("File not found"));
+        file.setIsDeleted(true);
+    }*/
 }
