@@ -1,13 +1,11 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,5 +54,9 @@ public class FolderController {
                     folder.getUser().getId()
             );
         }
+    }
+    @GetMapping("/hierarchy/{folderId}")
+    public FolderPythonRequestDTO getFolderHierarchy(@PathVariable Long folderId) {
+        return folderService.getFolderHierarchy(folderId);
     }
 }

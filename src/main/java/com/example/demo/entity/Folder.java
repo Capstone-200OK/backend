@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "folders")
@@ -33,6 +35,9 @@ public class Folder {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_folder_id")
     private Folder parentFolder;
+
+    @OneToMany(mappedBy = "parentFolder", fetch = FetchType.LAZY)
+    private List<Folder> subFolders = new ArrayList<>();
 
     @CreationTimestamp
     private Timestamp createdAt;
