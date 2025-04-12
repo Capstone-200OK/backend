@@ -37,6 +37,7 @@ public class FileService {
                 .filePath(fileRequestDTO.getFilePath())
                 .fileType(fileRequestDTO.getFileType())
                 .size(fileRequestDTO.getSize())
+                .isDeleted(false)
                 .build();
 
         return fileRepository.save(file);
