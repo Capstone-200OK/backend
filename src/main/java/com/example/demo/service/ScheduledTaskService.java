@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
+
 @Service
 @RequiredArgsConstructor
 public class ScheduledTaskService {
@@ -22,13 +24,20 @@ public class ScheduledTaskService {
     public ScheduledTask addScheduledTask(ScheduledTaskDTO scheduledTaskDTO) {
         User user = userRepository.findById(scheduledTaskDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        Folder folder = folderRepository.findById(scheduledTaskDTO.getFolderId())
-                .orElseThrow(() -> new IllegalArgumentException("Folder not found"));
+
+        Folder previousFolder = folderRepository.findById(scheduledTaskDTO.getPreviousFolderId())
+                .orElseThrow(() -> new IllegalArgumentException("Previous folder not found"));
+
+        Folder newFolder = folderRepository.findById(scheduledTaskDTO.getNewFolderId())
+                .orElseThrow(() -> new IllegalArgumentException("New folder not found"));
 
         ScheduledTask scheduledTask = ScheduledTask.builder()
                 .user(user)
-                .folder(folder)
+                .previousFolder(previousFolder)
+                .newFolder(newFolder)
+                .criteria(scheduledTaskDTO.getCriteria())
                 .interval(scheduledTaskDTO.getInterval())
+                .nextExecuted(scheduledTaskDTO.getNextExecuted())
                 .build();
 
         return scheduledTaskRepository.save(scheduledTask);
@@ -49,6 +58,26 @@ public class ScheduledTaskService {
 
         if (scheduledTaskDTO.getInterval() != null) {
             scheduledTask.setInterval(scheduledTaskDTO.getInterval());
+        }
+
+        if (scheduledTaskDTO.getCriteria() != null) {
+            scheduledTask.setCriteria(scheduledTaskDTO.getCriteria());
+        }
+
+        if (scheduledTaskDTO.getPreviousFolderId() != null) {
+            Folder previousFolder = folderRepository.findById(scheduledTaskDTO.getPreviousFolderId())
+                    .orElseThrow(() -> new IllegalArgumentException("Previous folder not found"));
+            scheduledTask.setPreviousFolder(previousFolder);
+        }
+
+        if (scheduledTaskDTO.getNewFolderId() != null) {
+            Folder newFolder = folderRepository.findById(scheduledTaskDTO.getNewFolderId())
+                    .orElseThrow(() -> new IllegalArgumentException("New folder not found"));
+            scheduledTask.setNewFolder(newFolder);
+        }
+
+        if (scheduledTaskDTO.getNextExecuted() != null) {
+            scheduledTask.setNextExecuted(scheduledTaskDTO.getNextExecuted());
         }
 
         return scheduledTaskRepository.save(scheduledTask);
