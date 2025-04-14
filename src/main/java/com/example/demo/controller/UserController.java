@@ -1,7 +1,8 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.LoginDTO;
-import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.UserDTO.LoginDTO;
+import com.example.demo.dto.UserDTO.UserDTO;
+import com.example.demo.dto.UserDTO.UserResponseDTO;
 import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,14 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     final private UserService userService;
     @PostMapping("/login")
-    public ResponseEntity<Boolean> login(@RequestBody LoginDTO loginDTO) {
-        return ResponseEntity.ok(userService.login(loginDTO));
+    public ResponseEntity<UserResponseDTO> login(@RequestBody LoginDTO loginDTO) {
+        UserResponseDTO response = userService.login(loginDTO);
+        return ResponseEntity.ok(response);
     }
     @PostMapping("/signup")
-    public ResponseEntity<User> signup(@RequestBody UserDTO userDTO) {
-        return ResponseEntity.ok(userService.signup(userDTO));
+    public ResponseEntity<Boolean> signup(@RequestBody UserDTO userDTO) {
+        userService.signup(userDTO); // 예외 나면 아래 코드 실행 안 됨
+        return ResponseEntity.ok(true);
     }
     @GetMapping("/register")
     public String regiter() {
