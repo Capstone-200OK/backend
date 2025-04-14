@@ -2,8 +2,8 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import java.sql.Timestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "scheduled_tasks")
@@ -22,16 +22,21 @@ public class ScheduledTask {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "folder_id", nullable = false)
-    private Folder folder;
+    @JoinColumn(name = "previous_folder_id", nullable = false)
+    private Folder previousFolder;
+
+    @ManyToOne
+    @JoinColumn(name = "new_folder_id", nullable = false)
+    private Folder newFolder;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Criteria criteria;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "`interval`", nullable = false)
     private ScheduleInterval interval;
 
-    private Timestamp lastExecuted;
-
-    @CreationTimestamp
-    private Timestamp createdAt;
+    private LocalDateTime nextExecuted;
 }
 
