@@ -1,7 +1,8 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.LoginDTO;
-import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.UserDTO.LoginDTO;
+import com.example.demo.dto.UserDTO.UserDTO;
+import com.example.demo.dto.UserDTO.UserResponseDTO;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,17 +13,30 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
     final private UserRepository userRepository;
-    public Boolean login(LoginDTO loginDTO) {
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    public UserResponseDTO login(LoginDTO loginDTO) {
         User user = userRepository.findByEmail(loginDTO.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getPassword().equals(loginDTO.getPassword());
+                .orElseThrow(() -> new RuntimeException("등록되지 않은 이메일입니다."));
+
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        if (!encoder.matches(loginDTO.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return new UserResponseDTO(user.getId());
     }
-    public User signup(UserDTO userDTO) {
-        User user = new User();
-        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-        user.setNickName(userDTO.getNickname());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        return userRepository.save(user);
+    public void signup(UserDTO userDTO) {
+        // 중복 이메일 검사
+        if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+        }
+
+        User user = User.builder()
+                .nickName(userDTO.getNickname())
+                .email(userDTO.getEmail())
+                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .build();
+
+        userRepository.save(user);
     }
 }
