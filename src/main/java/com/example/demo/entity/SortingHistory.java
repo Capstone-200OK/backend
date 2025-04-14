@@ -23,18 +23,7 @@ public class SortingHistory {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "file_id", nullable = false)
-    private File file;
-
-    @ManyToOne
-    @JoinColumn(name = "previous_folder_id", nullable = false)
-    private Folder previousFolder;
-
-    @ManyToOne
-    @JoinColumn(name = "new_folder_id", nullable = false)
-    private Folder newFolder;
-
     @CreationTimestamp
     private Timestamp sortedAt;
 }
+
