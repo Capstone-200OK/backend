@@ -66,19 +66,20 @@ public class SortingHistoryService {
             Folder newFolder = folderRepository.findById(fileDTO.getNewFolderId())
                     .orElseThrow(() -> new RuntimeException("새 폴더를 찾을 수 없습니다."));
 
-            // 변경사항 적용
-            file.setName(fileDTO.getNewName());
-            file.setFilePath(fileDTO.getNewFilePath() + fileDTO.getNewName());
-            file.setFolder(newFolder);
-
             // 정리 이력 저장
             FileSortingHistory fileSorting = FileSortingHistory.builder()
                     .file(file)
                     .sorting(sorting)
                     .previousFolder(previousFolder)
                     .newFolder(newFolder)
+                    .previousFilePath(fileRepository.getReferenceById(fileDTO.getFileId()).getFilePath())
                     .build();
             fileSortingHistoryRepository.save(fileSorting);
+
+            // 변경사항 적용
+            file.setName(fileDTO.getNewName());
+            file.setFilePath(fileDTO.getNewFilePath());
+            file.setFolder(newFolder);
         }
     }
 
@@ -92,11 +93,13 @@ public class SortingHistoryService {
             Folder folder = record.getFolder();
             Folder parentFolder = folder.getParentFolder();
             String originalName = folder.getName();
+            originalName = originalName.replaceAll("\\(\\d+\\)$", ""); // 끝에 붙은 (숫자) 제거
             String newName = originalName;
+
             int suffix = 1;
 
             while (folderRepository.existsByUserIdAndParentFolderAndName(folder.getUser().getId(), parentFolder, newName)) {
-                newName = originalName + " (" + suffix + ")";
+                newName = originalName + "(" + suffix + ")";
                 suffix++;
             }
 
@@ -112,17 +115,34 @@ public class SortingHistoryService {
 
             String originalName = file.getName();
             String fileType = file.getFileType();
+
             String baseName = originalName;
+            if (originalName.toLowerCase().endsWith("." + fileType)) {
+                baseName = originalName.substring(0, originalName.length() - (fileType.length() + 1));
+            }
+            baseName = baseName.replaceAll("\\(\\d+\\)$", ""); // 끝에 붙은 (숫자) 제거
+
+            String candidateName = baseName + "." + fileType;
             int suffix = 1;
 
-            while (fileRepository.existsByFolderAndNameAndFileType(previousFolder, baseName, fileType)) {
-                baseName = originalName + " (" + suffix + ")";
+            while (fileRepository.existsByFolderAndNameAndFileType(previousFolder, candidateName, fileType)) {
+                candidateName = baseName + "(" + suffix + ")." + fileType;
                 suffix++;
             }
 
-            file.setName(baseName);
+            file.setName(candidateName);
             file.setFolder(previousFolder);
-            // 경로 복원하기
+
+            // 경로 복원
+            String previousPath = record.getPreviousFilePath();
+            if (previousPath != null && !previousPath.isBlank()) {
+                int lastSlashIndex = previousPath.lastIndexOf('\\');
+                if (lastSlashIndex != -1) {
+                    String newPath = previousPath.substring(0, lastSlashIndex + 1) + candidateName;
+                    file.setFilePath(newPath);
+                }
+            }
+
             fileRepository.save(file);
         });
 

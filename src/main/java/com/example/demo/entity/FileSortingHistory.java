@@ -33,4 +33,7 @@ public class FileSortingHistory {
     @ManyToOne
     @JoinColumn(name = "new_folder_id")
     private Folder newFolder;
+
+    @JoinColumn(name = "previous_file_path")
+    private String previousFilePath;
 }
