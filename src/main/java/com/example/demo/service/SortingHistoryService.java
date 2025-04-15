@@ -147,5 +147,9 @@ public class SortingHistoryService {
                 .map(Folder::getId)
                 .toList();
         folderRepository.deleteAll(folderIdsToDelete);
+
+        // 4. sorting_history에서 기록 삭제
+        sortingHistoryRepository.deleteBySortingId(sortingId);
+        sortingHistoryRepository.flush();
     }
 }
