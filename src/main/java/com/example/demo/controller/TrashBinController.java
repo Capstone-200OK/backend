@@ -5,7 +5,7 @@ import com.example.demo.dto.TrashBinResponseDTO;
 import com.example.demo.service.TrashBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import com.example.demo.entity.TrashBin;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -17,19 +17,23 @@ public class TrashBinController {
     private final TrashBinService trashBinService;
 
     @PostMapping("/move")
-    public TrashBin moveToTrash(@RequestBody TrashBinRequestDTO dto) {
-        return trashBinService.moveToTrash(dto);
+    public ResponseEntity<Void> moveToTrash(@RequestBody TrashBinRequestDTO dto) {
+        trashBinService.moveToTrash(dto);
+        return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/restore/{trashId}")
-    public void restore(@PathVariable Long trashId) {
-        trashBinService.restore(trashId);
+    @PostMapping("/restore")
+    public ResponseEntity<Void> restore(@RequestBody List<Long> trashIds) {
+        trashBinService.restoreAll(trashIds);
+        return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/delete/{trashId}")
-    public void deletePermanently(@PathVariable Long trashId) {
-        trashBinService.deletePermanently(trashId);
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deletePermanently(@RequestBody List<Long> trashIds) {
+        trashBinService.deleteAllPermanently(trashIds);
+        return ResponseEntity.ok().build();
     }
+
 
     @GetMapping("/list/{userId}")
     public List<TrashBinResponseDTO> getTrashFiles(@PathVariable Long userId) {
