@@ -1,10 +1,11 @@
 package com.example.demo.dto;
 
 import lombok.Data;
+import java.util.List;
 
 @Data
 public class TrashBinRequestDTO {
     private Long userId;
-    private Long fileId;     // optional
-    private Long folderId;   // optional
+    private List<Long> fileIds;     // 여러 개 가능
+    private List<Long> folderIds;   // 여러 개 가능
 }

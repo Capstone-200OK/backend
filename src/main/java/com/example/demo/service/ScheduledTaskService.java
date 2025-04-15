@@ -11,8 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
-
 @Service
 @RequiredArgsConstructor
 public class ScheduledTaskService {
@@ -21,7 +19,7 @@ public class ScheduledTaskService {
     private final FolderRepository folderRepository;
 
     @Transactional
-    public ScheduledTask addScheduledTask(ScheduledTaskDTO scheduledTaskDTO) {
+    public void addScheduledTask(ScheduledTaskDTO scheduledTaskDTO) {
         User user = userRepository.findById(scheduledTaskDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -40,7 +38,7 @@ public class ScheduledTaskService {
                 .nextExecuted(scheduledTaskDTO.getNextExecuted())
                 .build();
 
-        return scheduledTaskRepository.save(scheduledTask);
+        scheduledTaskRepository.save(scheduledTask);
     }
 
     @Transactional
@@ -52,7 +50,7 @@ public class ScheduledTaskService {
     }
 
     @Transactional
-    public ScheduledTask modifyScheduledTask(Long taskId, ScheduledTaskDTO scheduledTaskDTO) {
+    public void modifyScheduledTask(Long taskId, ScheduledTaskDTO scheduledTaskDTO) {
         ScheduledTask scheduledTask = scheduledTaskRepository.findById(taskId)
                 .orElseThrow(() -> new IllegalArgumentException("Task not found"));
 
@@ -80,6 +78,6 @@ public class ScheduledTaskService {
             scheduledTask.setNextExecuted(scheduledTaskDTO.getNextExecuted());
         }
 
-        return scheduledTaskRepository.save(scheduledTask);
+        scheduledTaskRepository.save(scheduledTask);
     }
 }

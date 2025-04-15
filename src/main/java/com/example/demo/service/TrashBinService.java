@@ -27,65 +27,62 @@ public class TrashBinService {
     private final UserRepository userRepository;
 
     @Transactional
-    public TrashBin moveToTrash(TrashBinRequestDTO dto) {
-        if ((dto.getFileId() == null && dto.getFolderId() == null) ||
-                (dto.getFileId() != null && dto.getFolderId() != null)) {
-            throw new IllegalArgumentException("fileId 또는 folderId 중 하나만 지정해야 합니다.");
-        }
-
+    public void moveToTrash(TrashBinRequestDTO dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다."));
 
-        if (dto.getFileId() != null) {
-            File file = fileRepository.findById(dto.getFileId())
-                    .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
+        // 파일 처리
+        if (dto.getFileIds() != null) {
+            for (Long fileId : dto.getFileIds()) {
+                File file = fileRepository.findById(fileId)
+                        .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
 
-            // 상위 폴더가 삭제된 상태라면 직접 삭제하지 않음
-            Folder parent = file.getFolder();
-            if (parent != null && Boolean.TRUE.equals(parent.getIsDeleted())) {
-                throw new IllegalStateException("상위 폴더가 삭제된 파일은 직접 삭제할 수 없습니다.");
+                Folder parent = file.getFolder();
+                if (parent != null && Boolean.TRUE.equals(parent.getIsDeleted())) {
+                    throw new IllegalStateException("상위 폴더가 삭제된 파일은 직접 삭제할 수 없습니다.");
+                }
+                if (Boolean.TRUE.equals(file.getIsDeleted())) {
+                    throw new IllegalStateException("이미 삭제된 파일입니다.");
+                }
+
+                file.setIsDeleted(true);
+                fileRepository.save(file);
+
+                TrashBin trash = TrashBin.builder()
+                        .user(user)
+                        .file(file)
+                        .build();
+
+                trashBinRepository.save(trash);
             }
-
-            if (Boolean.TRUE.equals(file.getIsDeleted())) {
-                throw new IllegalStateException("이미 삭제된 파일입니다.");
-            }
-
-            file.setIsDeleted(true);
-
-            TrashBin trash = TrashBin.builder()
-                    .user(user)
-                    .file(file)
-                    .folder(file.getFolder())
-                    .build();
-
-            return trashBinRepository.save(trash);
         }
 
-        if (dto.getFolderId() != null) {
-            Folder folder = folderRepository.findById(dto.getFolderId())
-                    .orElseThrow(() -> new RuntimeException("폴더를 찾을 수 없습니다."));
+        // 폴더 처리
+        if (dto.getFolderIds() != null) {
+            for (Long folderId : dto.getFolderIds()) {
+                Folder folder = folderRepository.findById(folderId)
+                        .orElseThrow(() -> new RuntimeException("폴더를 찾을 수 없습니다."));
 
-            if (folder.getParentFolder() != null && Boolean.TRUE.equals(folder.getParentFolder().getIsDeleted())) {
-                throw new IllegalStateException("상위 폴더가 삭제된 폴더는 직접 삭제할 수 없습니다.");
+                if (folder.getParentFolder() != null && Boolean.TRUE.equals(folder.getParentFolder().getIsDeleted())) {
+                    continue;
+                }
+
+                if (Boolean.TRUE.equals(folder.getIsDeleted())) {
+                    continue;
+                }
+
+                markFolderAndContentsAsDeleted(folder);
+
+                TrashBin trash = TrashBin.builder()
+                        .user(user)
+                        .folder(folder)
+                        .build();
+
+                trashBinRepository.save(trash);
             }
-
-            if (Boolean.TRUE.equals(folder.getIsDeleted())) {
-                throw new IllegalStateException("이미 삭제된 폴더입니다.");
-            }
-
-            // 재귀적으로 isDeleted 처리
-            markFolderAndContentsAsDeleted(folder);
-
-            TrashBin trash = TrashBin.builder()
-                    .user(user)
-                    .folder(folder)
-                    .build();
-
-            return trashBinRepository.save(trash);
         }
-
-        throw new IllegalStateException("휴지통 이동 실패");
     }
+
 
     private void markFolderAndContentsAsDeleted(Folder folder) {
         folder.setIsDeleted(true);
@@ -100,6 +97,13 @@ public class TrashBinService {
         List<Folder> children = folderRepository.findByParentFolderId(folder.getId());
         for (Folder child : children) {
             markFolderAndContentsAsDeleted(child);
+        }
+    }
+
+    @Transactional
+    public void restoreAll(List<Long> trashIds) {
+        for (Long id : trashIds) {
+            restore(id);
         }
     }
 
@@ -150,6 +154,13 @@ public class TrashBinService {
     }
 
     @Transactional
+    public void deleteAllPermanently(List<Long> trashIds) {
+        for (Long id : trashIds) {
+            deletePermanently(id);
+        }
+    }
+
+    @Transactional
     public void deletePermanently(Long trashId) {
         TrashBin trash = trashBinRepository.findById(trashId)
                 .orElseThrow(() -> new RuntimeException("휴지통 항목이 존재하지 않습니다."));
@@ -168,9 +179,7 @@ public class TrashBinService {
     private void deleteFolderAndContents(Folder folder) {
         // 파일 삭제
         List<File> files = fileRepository.findByFolderId(folder.getId());
-        for (File file : files) {
-            fileRepository.delete(file);
-        }
+        fileRepository.deleteAll(files);
 
         // 하위 폴더 재귀 삭제
         List<Folder> children = folderRepository.findByParentFolderId(folder.getId());
