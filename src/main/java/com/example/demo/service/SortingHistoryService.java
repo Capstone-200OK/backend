@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.SortingHistoryRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
 import com.example.demo.entity.*;

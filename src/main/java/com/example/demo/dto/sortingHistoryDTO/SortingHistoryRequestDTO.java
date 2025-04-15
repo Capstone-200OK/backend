@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.sortingHistoryDTO;
 import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
 

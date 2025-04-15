@@ -1,6 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ScheduledTaskDTO;
+import com.example.demo.dto.scheduledTaskDTO.ScheduledTaskDTO;
 import com.example.demo.service.ScheduledTaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.ScheduledTaskDTO;
+import com.example.demo.dto.scheduledTaskDTO.ScheduledTaskDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.ScheduledTask;
 import com.example.demo.entity.User;

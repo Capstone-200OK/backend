@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.TrashBinRequestDTO;
-import com.example.demo.dto.TrashBinResponseDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinResponseDTO;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.TrashBin;

@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.trashBinDTO;
 
 import lombok.Data;
 import java.util.List;
