@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.TrashBinRequestDTO;
-import com.example.demo.dto.TrashBinResponseDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinResponseDTO;
 import com.example.demo.service.TrashBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;

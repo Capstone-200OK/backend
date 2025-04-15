@@ -1,4 +1,4 @@
-package com.example.demo.dto;
+package com.example.demo.dto.scheduledTaskDTO;
 
 import com.example.demo.entity.ScheduleInterval;
 import com.example.demo.entity.Criteria;

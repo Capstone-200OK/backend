@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.service.SortingHistoryService;
-import com.example.demo.dto.SortingHistoryRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
