@@ -179,9 +179,7 @@ public class TrashBinService {
     private void deleteFolderAndContents(Folder folder) {
         // 파일 삭제
         List<File> files = fileRepository.findByFolderId(folder.getId());
-        for (File file : files) {
-            fileRepository.delete(file);
-        }
+        fileRepository.deleteAll(files);
 
         // 하위 폴더 재귀 삭제
         List<Folder> children = folderRepository.findByParentFolderId(folder.getId());
