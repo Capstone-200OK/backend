@@ -1,8 +1,8 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import jakarta.transaction.Transactional;
@@ -85,8 +85,7 @@ public class SortingHistoryService {
 
     @Transactional
     public void rollbackSortingHistory(Long sortingId) {
-        SortingHistory sorting = sortingHistoryRepository.findById(sortingId)
-                .orElseThrow(() -> new RuntimeException("정리 기록이 존재하지 않습니다."));
+        sortingHistoryRepository.findById(sortingId).orElseThrow(() -> new RuntimeException("정리 기록이 존재하지 않습니다."));
 
         // 1. 삭제됐던 폴더 복구
         folderSortingHistoryRepository.findBySortingIdAndStatus(sortingId, FolderStatus.DELETED).forEach(record -> {
@@ -136,7 +135,7 @@ public class SortingHistoryService {
             // 경로 복원
             String previousPath = record.getPreviousFilePath();
             if (previousPath != null && !previousPath.isBlank()) {
-                int lastSlashIndex = previousPath.lastIndexOf('\\');
+                int lastSlashIndex = previousPath.lastIndexOf('/');
                 if (lastSlashIndex != -1) {
                     String newPath = previousPath.substring(0, lastSlashIndex + 1) + candidateName;
                     file.setFilePath(newPath);
