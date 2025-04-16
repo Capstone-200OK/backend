@@ -54,8 +54,16 @@ public class FolderService {
                     .orElseThrow(() -> new IllegalArgumentException("부모 폴더를 찾을 수 없습니다."));
         }
 
+        // 중복 이름 해결
+        String resolvedName;
+        if (parent == null) {
+            resolvedName = resolveDuplicateFolderName(user.getId(), null, folderRequestDTO.getName());
+        } else {
+            resolvedName = resolveDuplicateFolderName(user.getId(), parent.getId(), folderRequestDTO.getName());
+        }
+
         Folder folder = Folder.builder()
-                .name(folderRequestDTO.getName())
+                .name(resolvedName)
                 .user(user)
                 .parentFolder(parent)
                 .isDeleted(false)
@@ -63,6 +71,7 @@ public class FolderService {
 
         return folderRepository.save(folder);
     }
+
 
     @Transactional
     public Folder findOrCreateFolder(FolderRequestDTO folderRequestDTO) {
@@ -80,6 +89,37 @@ public class FolderService {
                 .orElseThrow(() -> new RuntimeException("Folder not found"));
 
         return buildFolderDTO(folder);
+    }
+
+    @Transactional(readOnly = true)
+    public Long getFolderIdByPath(Long userId, String path) {
+        String[] names = path.split("/");
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Folder current = null;
+        for (String name : names) {
+            if (current == null) {
+                current = folderRepository.findByNameAndParentFolderIsNullAndUser(name, user)
+                        .orElseThrow(() -> new RuntimeException("Root folder not found: " + name));
+            } else {
+                current = folderRepository.findByNameAndParentFolderAndUser(name, current, user)
+                        .orElseThrow(() -> new RuntimeException("Subfolder not found: " + name));
+            }
+        }
+        return current.getId();
+    }
+    private String resolveDuplicateFolderName(Long userId, Long parentFolderId, String baseName) {
+        String newName = baseName;
+        int counter = 1;
+
+        boolean exists = folderRepository.existsByUserIdAndParentFolderIdAndName(userId, parentFolderId, newName);
+        while (exists) {
+            newName = baseName + "_" + counter;
+            counter++;
+            exists = folderRepository.existsByUserIdAndParentFolderIdAndName(userId, parentFolderId, newName);
+        }
+        return newName;
     }
 
     private FolderPythonRequestDTO buildFolderDTO(Folder folder) {

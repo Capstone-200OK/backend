@@ -6,10 +6,10 @@ import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.service.FileService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/file")
@@ -37,6 +37,14 @@ public class FileController {
         fileService.deleteFile(deleteRequestDTO);
     }*/
 
+    @GetMapping("/list")
+    public ResponseEntity<List<FileDTO>> getFilesByFolder(@RequestParam Long folderId) {
+        List<File> files = fileService.getFilesByFolder(folderId);
+        List<FileDTO> response = files.stream()
+                .map(FileDTO::fromEntity)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
 
 
     public record FileDTO(Long id, String name, Long folderId) {

@@ -15,8 +15,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(false);
     }
-    /*@Bean
+    @Bean
     public RestTemplate restTemplate() {
         return new RestTemplate();
-    }*/
+    }
 }

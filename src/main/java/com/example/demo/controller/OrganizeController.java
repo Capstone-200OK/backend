@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class OrganizeController {
 
-    RestTemplate restTemplate; // Python 서버와 통신용
+    private final RestTemplate restTemplate; // Python 서버와 통신용
     private final String PYTHON_SERVER_URL = "http://localhost:5000"; // Python Flask
     private final FileService fileService;
     private final FolderService folderService;
@@ -35,10 +35,14 @@ public class OrganizeController {
     public ResponseEntity<?> startOrganize(@RequestBody Map<String, Object> payload) {
         // 예: payload {"folderId": 2}
         Long folderId = ((Number) payload.get("folderId")).longValue();
+        String sortType = (String) payload.get("mode");
+        String sortPath = (String) payload.get("output_path");
 
         // Python에게 /organize_folder 호출해 "폴더 자동분류"를 요청
         Map<String, Object> requestToPython = new HashMap<>();
         requestToPython.put("folderId", folderId);
+        requestToPython.put("mode", sortType);
+        requestToPython.put("output_path", sortPath);
 
         // Python 서버로 POST
         ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -68,23 +72,36 @@ public class OrganizeController {
                 // 1. destination 경로에서 새 폴더 경로를 파싱 (예: "/organized/text_files/xls_files/test.xlsx" 에서 폴더 부분)
                 String destPath = op.getDestination();
                 // 폴더 경로는 파일명 제외한 경로
-                String newFolderPath = destPath.substring(0, destPath.lastIndexOf(File.separator));
-
+                String normalizedPath = destPath.replace("\\", "/");  // 경로 통일
+                int lastSlashIndex = normalizedPath.lastIndexOf("/");
+                if (lastSlashIndex == -1) {
+                    throw new IllegalArgumentException("Invalid path: " + destPath);
+                }
                 // 2. newFolderPath를 기반으로 폴더 정보를 생성하거나 검색
                 // 예를 들어, 폴더 경로의 마지막 폴더명을 이용하여 FolderRequestDTO를 구성
-                FolderRequestDTO folderRequest = new FolderRequestDTO();
+                //FolderRequestDTO folderRequest = new FolderRequestDTO();
                 // newFolderPath를 경로 구분자로 분리해서 마지막 부분(새 폴더 이름) 선택.
-                String[] parts = newFolderPath.split(Pattern.quote(File.separator));
-                String newFolderName = parts[parts.length - 1];
-                folderRequest.setName(newFolderName);
-                folderRequest.setUserId(userId);
-                folderRequest.setParentFolderId(1L); // 실 구현시 find를 통해 parentFolderId 가져오기
-                System.out.println("folderrequest: " + folderRequest);
+                String newFolderPath = normalizedPath.substring(0, lastSlashIndex);  // 마지막 / 전까지 폴더경로
+                String[] folderNames = newFolderPath.split("/");
+                Long parentId = 1L;  // Root 폴더 ID
+                Folder folder = null;
+                for (String name : folderNames) {
+                    if (name == null || name.isBlank()) continue;
+
+                    FolderRequestDTO folderRequest = new FolderRequestDTO();
+                    folderRequest.setName(name);
+                    folderRequest.setUserId(userId);
+                    folderRequest.setParentFolderId(parentId);
+
+                    folder = folderService.findOrCreateFolder(folderRequest);
+                    parentId = folder.getId(); // 다음 폴더의 parent로 연결
+                }
                 // 만약 상위 폴더 정보도 있다면 추가 (예: parentFolderId)
                 // folderRequest.setParentFolderId(...);
 
-                // findOrCreateFolder()를 통해 새 폴더 엔티티를 확보
-                Folder folder = folderService.findOrCreateFolder(folderRequest);
+                if (folder == null) {
+                    throw new IllegalStateException("Folder creation failed for path: " + newFolderPath);
+                }
 
                 // 3. MoveRequestDTO를 생성하여 파일의 folderId, filePath 업데이트
                 MoveRequestDTO moveRequest = new MoveRequestDTO(op.getFileId(), folder.getId(), destPath);
@@ -101,6 +118,8 @@ public class OrganizeController {
         // folderService.markFolderAsDeleted(result.getFolderId());
 
         // 최종적으로 DB 업데이트가 완료되었음을 반환
-        return ResponseEntity.ok("Result processed by Spring");
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "Result processed by Spring");
+        return ResponseEntity.ok(responseMap);
     }
 }
