@@ -4,8 +4,7 @@ import com.example.demo.entity.TrashBin;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface TrashBinRepository extends JpaRepository<TrashBin, Long> {
+
 }
