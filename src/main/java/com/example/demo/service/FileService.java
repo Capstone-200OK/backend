@@ -75,7 +75,13 @@ public class FileService {
 
         return newName;
     }
-
+    public long countByFolderId(Long folderId) {
+        return fileRepository.countByFolderIdAndIsDeletedFalse(folderId);
+    }
+    public File getFileById(Long id) {
+        return fileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
+    }
     @Transactional
     public void moveFile(MoveRequestDTO moveRequestDTO) {
         File file = fileRepository.findById(moveRequestDTO.getFileId())

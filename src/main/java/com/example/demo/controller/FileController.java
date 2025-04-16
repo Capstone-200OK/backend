@@ -16,6 +16,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileController {
     private final FileService fileService;
+    @GetMapping("/fileCount")
+    public Long fileCount(@RequestParam Long id){
+        return fileService.countByFolderId(id);
+    }
     @PostMapping("/upload")
     public FileDTO uploadFile(@RequestBody FileRequestDTO fileRequestDTO) {
         File file = fileService.uploadFile(fileRequestDTO);
