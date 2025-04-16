@@ -38,10 +38,16 @@ public class TrashBinController {
         return ResponseEntity.ok(new MessageResponse("휴지통에서 삭제되었습니다."));
     }
 
-
     // 휴지통 목록 확인
     @GetMapping("/list/{userId}")
     public List<TrashBinResponseDTO> getTrashFiles(@PathVariable Long userId) {
         return trashBinService.getTrashFilesByUser(userId);
+    }
+
+    // 자동 삭제 테스트용
+    @PostMapping("/autoDelete")
+    public ResponseEntity<Void> deleteExpiredTrash() {
+        trashBinService.deleteExpiredTrash();
+        return ResponseEntity.ok().build();
     }
 }

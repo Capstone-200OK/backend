@@ -13,7 +13,7 @@ import com.example.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -206,5 +206,22 @@ public class TrashBinService {
                         .deletedAt(trash.getDeletedAt())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    // 자동 삭제
+    @Transactional
+    public void deleteExpiredTrash() {
+//        LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(1); // 테스트용
+        LocalDateTime expirationTime = LocalDateTime.now().minusDays(30);
+
+        List<TrashBin> expired = trashBinRepository.findAll().stream()
+                .filter(trash -> trash.getDeletedAt().toLocalDateTime().isBefore(expirationTime))
+                .toList();
+
+        List<Long> expiredTrashIds = expired.stream()
+                .map(TrashBin::getId)
+                .toList();
+
+        deleteAllPermanently(expiredTrashIds);
     }
 }

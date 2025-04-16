@@ -8,5 +8,5 @@ import java.time.LocalDateTime;
 
 @Repository
 public interface ScheduledTaskRepository extends JpaRepository<ScheduledTask, Long> {
-    List<ScheduledTask> findByNextExecuted(LocalDateTime nextExecuted);
+    List<ScheduledTask> findByNextExecutedBeforeOrNextExecutedEquals(LocalDateTime before, LocalDateTime equals);
 }
