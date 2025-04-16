@@ -11,5 +11,6 @@ public class OperationDTO {
     // private Long folderId;
     private String destination;  // 새 경로
     private Long fileId;
+    private String name;
     // 필요한 필드가 더 있으면 추가 (ex: fileId, userId 등)
 }
