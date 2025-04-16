@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.fileDTO.FilePythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
+import com.example.demo.dto.folderDTO.FolderResult;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.User;
@@ -80,7 +81,17 @@ public class FolderService {
         return found.orElseGet(() -> addFolder(folderRequestDTO));
         // 없으면 새로 생성
     }
+    @Transactional
+    public FolderResult findOrCreateFolderWithFlag(FolderRequestDTO folderRequestDTO) {
+        Optional<Folder> found = findFolderByName(folderRequestDTO);
 
+        if (found.isPresent()) {
+            return new FolderResult(found.get(), false);
+        } else {
+            Folder created = addFolder(folderRequestDTO);
+            return new FolderResult(created, true);
+        }
+    }
     @Transactional(readOnly = true)
     public FolderPythonRequestDTO getFolderHierarchy(Long folderId) {
         Folder folder = folderRepository.findById(folderId)
@@ -133,7 +144,9 @@ public class FolderService {
         }
         pathBuilder.append(folder.getName());
     }
-
+    public Folder getFolderById(Long id) {
+        return folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
+    }
     private FolderPythonRequestDTO buildFolderDTO(Folder folder) {
         // 1) 기본 DTO 생성
         FolderPythonRequestDTO dto = new FolderPythonRequestDTO();
