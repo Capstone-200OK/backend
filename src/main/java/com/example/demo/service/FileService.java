@@ -10,9 +10,11 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.UserRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +32,17 @@ public class FileService {
         Folder folder = folderRepository.findById(fileRequestDTO.getFolderId())
                 .orElseThrow(() -> new IllegalArgumentException("Folder not found"));
 
+        // 중복 처리된 최종 파일 이름
+        String finalName = resolveDuplicateName(folder.getId(), fileRequestDTO.getName());
+
+        // 원래 filePath의 디렉토리 부분 유지, 파일명만 교체
+        String newFilePath = replaceFileNameInPath(fileRequestDTO.getFilePath(), finalName);
+
         File file = File.builder()
                 .user(user)
                 .folder(folder)
-                .name(fileRequestDTO.getName())
-                .filePath(fileRequestDTO.getFilePath())
+                .name(finalName)
+                .filePath(newFilePath)
                 .fileType(fileRequestDTO.getFileType())
                 .size(fileRequestDTO.getSize())
                 .isDeleted(false)
@@ -42,6 +50,32 @@ public class FileService {
 
         return fileRepository.save(file);
     }
+    private String replaceFileNameInPath(String originalPath, String newFileName) {
+        int lastSlash = originalPath.lastIndexOf('/');
+        if (lastSlash == -1) return newFileName; // fallback
+        return originalPath.substring(0, lastSlash + 1) + newFileName;
+    }
+    private String resolveDuplicateName(Long folderId, String originalName) {
+        String baseName = originalName;
+        String extension = "";
+
+        int dotIndex = originalName.lastIndexOf('.');
+        if (dotIndex != -1) {
+            baseName = originalName.substring(0, dotIndex);
+            extension = originalName.substring(dotIndex);
+        }
+
+        String newName = originalName;
+        int counter = 1;
+
+        while (fileRepository.existsByFolderIdAndNameAndIsDeletedFalse(folderId, newName)) {
+            newName = baseName + "_" + counter + extension;
+            counter++;
+        }
+
+        return newName;
+    }
+
     @Transactional
     public void moveFile(MoveRequestDTO moveRequestDTO) {
         File file = fileRepository.findById(moveRequestDTO.getFileId())
@@ -57,6 +91,11 @@ public class FileService {
         file.setName(renameRequestDTO.getNewName());
         file.setFilePath(renameRequestDTO.getNewFilePath());
     }
+    @Transactional(readOnly = true)
+    public List<File> getFilesByFolder(Long folderId) {
+        return fileRepository.findByFolderIdAndIsDeletedFalse(folderId);
+    }
+
 /*    @Transactional
     public void deleteFile(DeleteRequestDTO deleteRequestDTO) {
         File file = fileRepository.findById(deleteRequestDTO.getFileId())
