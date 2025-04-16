@@ -5,6 +5,7 @@ import com.example.demo.dto.OrganizedResultDTO;
 import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.entity.Folder;
+import com.example.demo.repository.FolderRepository;
 import com.example.demo.service.FileService;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;
@@ -30,19 +31,22 @@ public class OrganizeController {
     private final String PYTHON_SERVER_URL = "http://localhost:5000"; // Python Flask
     private final FileService fileService;
     private final FolderService folderService;
+    private final FolderRepository folderRepository;
     // 1) 사용자가 folderId를 선택 → /organize/start 로 POST
     @PostMapping("/start")
     public ResponseEntity<?> startOrganize(@RequestBody Map<String, Object> payload) {
         // 예: payload {"folderId": 2}
         Long folderId = ((Number) payload.get("folderId")).longValue();
         String sortType = (String) payload.get("mode");
-        String sortPath = (String) payload.get("output_path");
-
+        Long destinationFolderId = ((Number) payload.get("destinationFolderId")).longValue();
+        Folder destFolder = folderRepository.findById(destinationFolderId)
+                .orElseThrow(() -> new RuntimeException("Destination folder not found"));
+        String outputPath = folderService.buildFullPath(destFolder);
         // Python에게 /organize_folder 호출해 "폴더 자동분류"를 요청
         Map<String, Object> requestToPython = new HashMap<>();
         requestToPython.put("folderId", folderId);
         requestToPython.put("mode", sortType);
-        requestToPython.put("output_path", sortPath);
+        requestToPython.put("output_path", outputPath);
 
         // Python 서버로 POST
         ResponseEntity<Map> response = restTemplate.postForEntity(
@@ -83,7 +87,7 @@ public class OrganizeController {
                 // newFolderPath를 경로 구분자로 분리해서 마지막 부분(새 폴더 이름) 선택.
                 String newFolderPath = normalizedPath.substring(0, lastSlashIndex);  // 마지막 / 전까지 폴더경로
                 String[] folderNames = newFolderPath.split("/");
-                Long parentId = 1L;  // Root 폴더 ID
+                Long parentId = null;  // Root 폴더 ID
                 Folder folder = null;
                 for (String name : folderNames) {
                     if (name == null || name.isBlank()) continue;
