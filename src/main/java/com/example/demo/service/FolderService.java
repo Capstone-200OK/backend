@@ -35,8 +35,6 @@ public class FolderService {
         }
         System.out.println(parent);
         if (parent == null) {
-            Folder folder =  folderRepository.findByNameAndParentFolderIsNullAndUser(folderRequestDTO.getName(), user).get();
-            System.out.println(folder);
             return folderRepository.findByNameAndParentFolderIsNullAndUser(folderRequestDTO.getName(), user);
         } else {
             return folderRepository.findByNameAndParentFolderAndUser(folderRequestDTO.getName(), parent, user);
@@ -120,6 +118,20 @@ public class FolderService {
             exists = folderRepository.existsByUserIdAndParentFolderIdAndName(userId, parentFolderId, newName);
         }
         return newName;
+    }
+
+    public String buildFullPath(Folder folder) {
+        StringBuilder pathBuilder = new StringBuilder();
+        buildPathRecursive(folder, pathBuilder);
+        return pathBuilder.toString();
+    }
+
+    private void buildPathRecursive(Folder folder, StringBuilder pathBuilder) {
+        if (folder.getParentFolder() != null) {
+            buildPathRecursive(folder.getParentFolder(), pathBuilder);
+            pathBuilder.append("/");  // 구분자 추가
+        }
+        pathBuilder.append(folder.getName());
     }
 
     private FolderPythonRequestDTO buildFolderDTO(Folder folder) {
