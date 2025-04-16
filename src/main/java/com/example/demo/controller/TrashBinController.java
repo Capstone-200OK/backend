@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
 import com.example.demo.dto.trashBinDTO.TrashBinResponseDTO;
+import com.example.demo.dto.MessageResponse;
 import com.example.demo.service.TrashBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -16,25 +17,29 @@ public class TrashBinController {
 
     private final TrashBinService trashBinService;
 
+    // 휴지통으로 이동
     @PostMapping("/move")
-    public ResponseEntity<Void> moveToTrash(@RequestBody TrashBinRequestDTO dto) {
+    public ResponseEntity<MessageResponse> moveToTrash(@RequestBody TrashBinRequestDTO dto) {
         trashBinService.moveToTrash(dto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MessageResponse("휴지통으로 이동되었습니다."));
     }
 
+    // 휴지통에서 복구
     @PostMapping("/restore")
-    public ResponseEntity<Void> restore(@RequestBody List<Long> trashIds) {
+    public ResponseEntity<MessageResponse> restore(@RequestBody List<Long> trashIds) {
         trashBinService.restoreAll(trashIds);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MessageResponse("복구가 완료되었습니다."));
     }
 
+    // 휴지통에서 완전 삭제
     @DeleteMapping("/delete")
-    public ResponseEntity<Void> deletePermanently(@RequestBody List<Long> trashIds) {
+    public ResponseEntity<MessageResponse> deletePermanently(@RequestBody List<Long> trashIds) {
         trashBinService.deleteAllPermanently(trashIds);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(new MessageResponse("휴지통에서 삭제되었습니다."));
     }
 
 
+    // 휴지통 목록 확인
     @GetMapping("/list/{userId}")
     public List<TrashBinResponseDTO> getTrashFiles(@PathVariable Long userId) {
         return trashBinService.getTrashFilesByUser(userId);

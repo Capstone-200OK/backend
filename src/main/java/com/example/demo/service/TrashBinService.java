@@ -26,6 +26,7 @@ public class TrashBinService {
     private final TrashBinRepository trashBinRepository;
     private final UserRepository userRepository;
 
+    // 휴지통으로 이동
     @Transactional
     public void moveToTrash(TrashBinRequestDTO dto) {
         User user = userRepository.findById(dto.getUserId())
