@@ -2,12 +2,19 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.OperationDTO;
 import com.example.demo.dto.OrganizedResultDTO;
+import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
+import com.example.demo.dto.folderDTO.FolderResult;
+import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
+import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
+import com.example.demo.entity.FolderStatus;
 import com.example.demo.repository.FolderRepository;
 import com.example.demo.service.FileService;
 import com.example.demo.service.FolderService;
+import com.example.demo.service.SortingHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -32,6 +40,7 @@ public class OrganizeController {
     private final FileService fileService;
     private final FolderService folderService;
     private final FolderRepository folderRepository;
+    private final SortingHistoryService sortingHistoryService;
     // 1) 사용자가 folderId를 선택 → /organize/start 로 POST
     @PostMapping("/start")
     public ResponseEntity<?> startOrganize(@RequestBody Map<String, Object> payload) {
@@ -47,7 +56,7 @@ public class OrganizeController {
         requestToPython.put("folderId", folderId);
         requestToPython.put("mode", sortType);
         requestToPython.put("output_path", outputPath);
-
+        requestToPython.put("destinationFolderId", destinationFolderId);
         // Python 서버로 POST
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
@@ -70,11 +79,16 @@ public class OrganizeController {
         System.out.println("Received final result from Python: " + result);
         Long userId = 1L; // 예시: 실제 사용자 ID는 인증 정보를 통해 가져오거나 Spring에서 전달받음
 
+        List<FileUpdateRequestDTO> fileUpdates = new ArrayList<>();
+        List<FolderUpdateRequestDTO> folderUpdates = new ArrayList<>();
+
         // 각 OperationDTO를 순회하며 파일의 폴더 업데이트(이동) 처리
         for (OperationDTO op : result.getOperations()) {
             try {
                 // 1. destination 경로에서 새 폴더 경로를 파싱 (예: "/organized/text_files/xls_files/test.xlsx" 에서 폴더 부분)
                 String destPath = op.getDestination();
+                Long folderId = result.getDestinationFolderId();
+                //Folder folder1 = folderService.getFolderById(folderId);
                 // 폴더 경로는 파일명 제외한 경로
                 String normalizedPath = destPath.replace("\\", "/");  // 경로 통일
                 int lastSlashIndex = normalizedPath.lastIndexOf("/");
@@ -97,8 +111,16 @@ public class OrganizeController {
                     folderRequest.setUserId(userId);
                     folderRequest.setParentFolderId(parentId);
 
-                    folder = folderService.findOrCreateFolder(folderRequest);
+                    FolderResult folderResult = folderService.findOrCreateFolderWithFlag(folderRequest);
+                    folder = folderResult.getFolder();
                     parentId = folder.getId(); // 다음 폴더의 parent로 연결
+                    if (folderResult.isNewlyCreated()) {
+                        FolderUpdateRequestDTO folderUpdate = FolderUpdateRequestDTO.builder()
+                                .folderId(folder.getId())
+                                .status(FolderStatus.CREATED)
+                                .build();
+                        folderUpdates.add(folderUpdate);
+                    }
                 }
                 // 만약 상위 폴더 정보도 있다면 추가 (예: parentFolderId)
                 // folderRequest.setParentFolderId(...);
@@ -108,16 +130,51 @@ public class OrganizeController {
                 }
 
                 // 3. MoveRequestDTO를 생성하여 파일의 folderId, filePath 업데이트
+            /*  */
+
+                System.out.println("Updated fileId " + op.getFileId() + " to folderId " + folder.getId());
+                File originalFile = fileService.getFileById(op.getFileId());
+                FileUpdateRequestDTO fileUpdate = FileUpdateRequestDTO.builder()
+                        .fileId(op.getFileId())
+                        .newName(op.getName())  // 필요시 OperationDTO에 name도 넣도록
+                        .newFolderId(originalFile.getFolder().getId())
+                        .newFilePath(originalFile.getFilePath())
+                        .build();
+                fileUpdates.add(fileUpdate);
+                System.out.println("fileUpdate: " + fileUpdate);
                 MoveRequestDTO moveRequest = new MoveRequestDTO(op.getFileId(), folder.getId(), destPath);
                 System.out.println(moveRequest);
                 fileService.moveFile(moveRequest);
-
-                System.out.println("Updated fileId " + op.getFileId() + " to folderId " + folder.getId());
             } catch (Exception e) {
                 System.err.println("Error updating file with fileId " + op.getFileId() + ": " + e.getMessage());
             }
         }
+        Folder originalFolder = folderService.getFolderById(result.getFolderId());
+        System.out.println("countId"+fileService.countByFolderId(result.getFolderId()));
+        boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
 
+        if (shouldDelete) {
+            FolderUpdateRequestDTO deletedFolder = FolderUpdateRequestDTO.builder()
+                    .folderId(originalFolder.getId())
+                    .status(FolderStatus.DELETED)
+                    .build();
+            folderUpdates.add(deletedFolder);
+        }
+        else {
+            FolderUpdateRequestDTO deletedFolder = FolderUpdateRequestDTO.builder()
+                    .folderId(originalFolder.getId())
+                    .status(FolderStatus.MAINTAIN)
+                    .build();
+            folderUpdates.add(deletedFolder);
+        }
+
+        SortingHistoryRequestDTO historyRequest = SortingHistoryRequestDTO.builder()
+                .userId(userId)
+                .fileUpdates(fileUpdates)
+                .folderUpdates(folderUpdates)
+                .build();
+
+        sortingHistoryService.saveSortingHistory(historyRequest);
         // 추가: 만약 원래 사용되던 폴더(예: 자동분류 대상 폴더)는 삭제 처리해야 한다면, folderService.markFolderAsDeleted() 호출 등 추가 작업
         // folderService.markFolderAsDeleted(result.getFolderId());
 
