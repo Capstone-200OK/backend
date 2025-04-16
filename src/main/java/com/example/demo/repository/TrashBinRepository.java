@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TrashBinRepository extends JpaRepository<TrashBin, Long> {
-    List<TrashBin> findByDeletedAtBefore(LocalDateTime time);
+
 }
