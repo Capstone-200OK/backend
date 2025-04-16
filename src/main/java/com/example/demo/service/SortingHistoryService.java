@@ -62,9 +62,9 @@ public class SortingHistoryService {
             File file = fileRepository.findById(fileDTO.getFileId())
                     .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
 
-            Folder previousFolder = file.getFolder();
-            Folder newFolder = folderRepository.findById(fileDTO.getNewFolderId())
-                    .orElseThrow(() -> new RuntimeException("새 폴더를 찾을 수 없습니다."));
+            Folder newFolder = file.getFolder();
+            Folder previousFolder = folderRepository.findById(fileDTO.getNewFolderId())
+                    .orElseThrow(() -> new RuntimeException("이전 폴더를 찾을 수 없습니다."));
 
             // 정리 이력 저장
             FileSortingHistory fileSorting = FileSortingHistory.builder()
@@ -72,14 +72,14 @@ public class SortingHistoryService {
                     .sorting(sorting)
                     .previousFolder(previousFolder)
                     .newFolder(newFolder)
-                    .previousFilePath(fileRepository.getReferenceById(fileDTO.getFileId()).getFilePath())
+                    .previousFilePath(fileDTO.getNewFilePath())
                     .build();
             fileSortingHistoryRepository.save(fileSorting);
 
             // 변경사항 적용
-            file.setName(fileDTO.getNewName());
-            file.setFilePath(fileDTO.getNewFilePath());
-            file.setFolder(newFolder);
+//            file.setName(fileDTO.getNewName());
+//            file.setFilePath(fileDTO.getNewFilePath());
+//            file.setFolder(newFolder);
         }
     }
 
