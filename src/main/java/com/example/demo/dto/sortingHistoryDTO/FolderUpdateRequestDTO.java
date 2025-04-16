@@ -1,4 +1,4 @@
-package com.example.demo.dto.folderDTO;
+package com.example.demo.dto.sortingHistoryDTO;
 
 import com.example.demo.entity.FolderStatus;
 import lombok.Builder;

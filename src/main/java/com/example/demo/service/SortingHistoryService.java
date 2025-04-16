@@ -1,7 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
-import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.FileUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.FolderUpdateRequestDTO;
 import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
@@ -63,7 +63,7 @@ public class SortingHistoryService {
                     .orElseThrow(() -> new RuntimeException("파일을 찾을 수 없습니다."));
 
             Folder newFolder = file.getFolder();
-            Folder previousFolder = folderRepository.findById(fileDTO.getNewFolderId())
+            Folder previousFolder = folderRepository.findById(fileDTO.getPreviousFolderId())
                     .orElseThrow(() -> new RuntimeException("이전 폴더를 찾을 수 없습니다."));
 
             // 정리 이력 저장
@@ -72,14 +72,9 @@ public class SortingHistoryService {
                     .sorting(sorting)
                     .previousFolder(previousFolder)
                     .newFolder(newFolder)
-                    .previousFilePath(fileDTO.getNewFilePath())
+                    .previousFilePath(fileDTO.getPreviousFilePath())
                     .build();
             fileSortingHistoryRepository.save(fileSorting);
-
-            // 변경사항 적용
-//            file.setName(fileDTO.getNewName());
-//            file.setFilePath(fileDTO.getNewFilePath());
-//            file.setFolder(newFolder);
         }
     }
 

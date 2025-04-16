@@ -2,11 +2,11 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.OperationDTO;
 import com.example.demo.dto.OrganizedResultDTO;
-import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.dto.folderDTO.FolderResult;
-import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.FolderUpdateRequestDTO;
 import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
@@ -16,7 +16,6 @@ import com.example.demo.service.FileService;
 import com.example.demo.service.FolderService;
 import com.example.demo.service.SortingHistoryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,7 +27,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/organize")
@@ -136,9 +134,8 @@ public class OrganizeController {
                 File originalFile = fileService.getFileById(op.getFileId());
                 FileUpdateRequestDTO fileUpdate = FileUpdateRequestDTO.builder()
                         .fileId(op.getFileId())
-                        .newName(op.getName())  // 필요시 OperationDTO에 name도 넣도록
-                        .newFolderId(originalFile.getFolder().getId())
-                        .newFilePath(originalFile.getFilePath())
+                        .previousFolderId(originalFile.getFolder().getId())
+                        .previousFilePath(originalFile.getFilePath())
                         .build();
                 fileUpdates.add(fileUpdate);
                 System.out.println("fileUpdate: " + fileUpdate);

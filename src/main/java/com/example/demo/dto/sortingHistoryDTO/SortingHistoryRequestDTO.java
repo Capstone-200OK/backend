@@ -1,7 +1,5 @@
 package com.example.demo.dto.sortingHistoryDTO;
 
-import com.example.demo.dto.fileDTO.FileUpdateRequestDTO;
-import com.example.demo.dto.folderDTO.FolderUpdateRequestDTO;
 import lombok.Builder;
 import lombok.Data;
 
