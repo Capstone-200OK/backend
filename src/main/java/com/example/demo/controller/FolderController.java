@@ -5,6 +5,7 @@ import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -43,6 +44,17 @@ public class FolderController {
     @PostMapping("/findOrCreate")
     public Folder findOrCreateFolder(@RequestBody FolderRequestDTO folderRequestDTO) {
         return folderService.findOrCreateFolder(folderRequestDTO);
+    }
+
+    @GetMapping("/id-by-path")
+    public ResponseEntity<Map<String, Long>> getFolderIdByPath(
+            @RequestParam Long userId,
+            @RequestParam String path
+    ) {
+        Long folderId = folderService.getFolderIdByPath(userId, path);
+        Map<String, Long> result = new HashMap<>();
+        result.put("folderId", folderId);
+        return ResponseEntity.ok(result);
     }
 
     public record FolderDTO(Long id, String name, Long parentId, Long userId) {
