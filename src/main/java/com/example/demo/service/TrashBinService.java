@@ -141,9 +141,45 @@ public class TrashBinService {
     private void restoreFolderAndContents(Folder folder) {
         folder.setIsDeleted(false);
 
+        // 폴더 이름 충돌 방지 처리
+        Folder parentFolder = folder.getParentFolder();
+        String originalFolderName = folder.getName();
+        originalFolderName = originalFolderName.replaceAll("\\(\\d+\\)$", "");
+        String newFolderName = originalFolderName;
+        int folderSuffix = 1;
+
+        while (folderRepository.existsByUserIdAndParentFolderAndNameAndIdNot(
+                folder.getUser().getId(), parentFolder, newFolderName, folder.getId())) {
+            newFolderName = originalFolderName + "(" + folderSuffix + ")";
+            folderSuffix++;
+        }
+
+        folder.setName(newFolderName);
+
         // 파일 복구
         List<File> files = fileRepository.findByFolderId(folder.getId());
         for (File file : files) {
+            Folder fileParent = folder;
+
+            String originalFileName = file.getName();
+            String fileType = file.getFileType();
+
+            String baseName = originalFileName;
+            if (originalFileName.toLowerCase().endsWith("." + fileType)) {
+                baseName = originalFileName.substring(0, originalFileName.length() - (fileType.length() + 1));
+            }
+            baseName = baseName.replaceAll("\\(\\d+\\)$", "");
+
+            String candidateName = baseName + "." + fileType;
+            int suffix = 1;
+
+            while (fileRepository.existsByFolderAndNameAndFileTypeAndIdNot(
+                    fileParent, candidateName, fileType, file.getId())) {
+                candidateName = baseName + "(" + suffix + ")." + fileType;
+                suffix++;
+            }
+
+            file.setName(candidateName);
             file.setIsDeleted(false);
         }
 
@@ -153,6 +189,7 @@ public class TrashBinService {
             restoreFolderAndContents(child);
         }
     }
+
 
     @Transactional
     public void deleteAllPermanently(List<Long> trashIds) {
