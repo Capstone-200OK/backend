@@ -42,27 +42,27 @@ public class OrganizeController {
     // 1) 사용자가 folderId를 선택 → /organize/start 로 POST
     @PostMapping("/start")
     public ResponseEntity<?> startOrganize(@RequestBody Map<String, Object> payload) {
-        // 예: payload {"folderId": 2}
-        Long folderId = ((Number) payload.get("folderId")).longValue();
+        List<Integer> folderIdsRaw = (List<Integer>) payload.get("folderIds");
+        List<Long> folderIds = folderIdsRaw.stream().map(Long::valueOf).toList();
         String sortType = (String) payload.get("mode");
         Long destinationFolderId = ((Number) payload.get("destinationFolderId")).longValue();
+
         Folder destFolder = folderRepository.findById(destinationFolderId)
                 .orElseThrow(() -> new RuntimeException("Destination folder not found"));
         String outputPath = folderService.buildFullPath(destFolder);
-        // Python에게 /organize_folder 호출해 "폴더 자동분류"를 요청
+
         Map<String, Object> requestToPython = new HashMap<>();
-        requestToPython.put("folderId", folderId);
+        requestToPython.put("folderIds", folderIds); // ✅ 여러 개
         requestToPython.put("mode", sortType);
         requestToPython.put("output_path", outputPath);
-        requestToPython.put("destinationFolderId", destinationFolderId);
-        // Python 서버로 POST
+        requestToPython.put("destinationFolderId", destinationFolderId); // ✅ 하나
+
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
                 requestToPython,
                 Map.class
         );
 
-        // Python이 {"message":"Organize done"} 등 응답
         if (response.getStatusCode().is2xxSuccessful()) {
             return ResponseEntity.ok(response.getBody());
         } else {
@@ -146,24 +146,18 @@ public class OrganizeController {
                 System.err.println("Error updating file with fileId " + op.getFileId() + ": " + e.getMessage());
             }
         }
-        Folder originalFolder = folderService.getFolderById(result.getFolderId());
-        System.out.println("countId"+fileService.countByFolderId(result.getFolderId()));
-        boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
+        for (Long folderId : result.getSourceFolderIds()) {
+            Folder originalFolder = folderService.getFolderById(folderId);
+            boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
 
-        if (shouldDelete) {
-            FolderUpdateRequestDTO deletedFolder = FolderUpdateRequestDTO.builder()
+            FolderUpdateRequestDTO folderUpdate = FolderUpdateRequestDTO.builder()
                     .folderId(originalFolder.getId())
-                    .status(FolderStatus.DELETED)
+                    .status(shouldDelete ? FolderStatus.DELETED : FolderStatus.MAINTAIN)
                     .build();
-            folderUpdates.add(deletedFolder);
+
+            folderUpdates.add(folderUpdate);
         }
-        else {
-            FolderUpdateRequestDTO deletedFolder = FolderUpdateRequestDTO.builder()
-                    .folderId(originalFolder.getId())
-                    .status(FolderStatus.MAINTAIN)
-                    .build();
-            folderUpdates.add(deletedFolder);
-        }
+
 
         SortingHistoryRequestDTO historyRequest = SortingHistoryRequestDTO.builder()
                 .userId(userId)
