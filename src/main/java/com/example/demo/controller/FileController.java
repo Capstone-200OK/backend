@@ -6,6 +6,7 @@ import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.service.FileService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,7 +22,7 @@ public class FileController {
     public Long fileCount(@RequestParam Long id){
         return fileService.countByFolderId(id);
     }
-    @PostMapping(value = "/upload", consumes = "multipart/form-data")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public FileDTO uploadFile(@RequestPart("meta") FileRequestDTO fileRequestDTO,
                               @RequestPart("file") MultipartFile multipartFile) {
         File file = fileService.uploadFile(fileRequestDTO,multipartFile);
