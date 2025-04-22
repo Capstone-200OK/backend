@@ -49,10 +49,11 @@ public class FileService {
                 .user(user)
                 .folder(folder)
                 .name(finalName)
-                .filePath(s3Url)
+                .filePath(newFilePath)
                 .fileType(fileRequestDTO.getFileType())
                 .size(fileRequestDTO.getSize())
                 .isDeleted(false)
+                .fileUrl(s3Url)
                 .build();
 
         return fileRepository.save(file);

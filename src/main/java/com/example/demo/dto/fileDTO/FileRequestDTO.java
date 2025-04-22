@@ -10,4 +10,5 @@ public class FileRequestDTO {
     private String fileType;
     private String filePath;
     private Long size;
+    private String fileUrl;
 }
