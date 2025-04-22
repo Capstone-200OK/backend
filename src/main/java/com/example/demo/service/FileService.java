@@ -11,8 +11,10 @@ import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -23,9 +25,12 @@ public class FileService {
     private final FileRepository fileRepository;
     private final UserRepository userRepository;
     private final FolderRepository folderRepository;
+    private final S3Uploader s3Uploader;
+    @Value("${spring.cloud.aws.s3.bucket}")
+    private String bucket;
 
     @Transactional
-    public File uploadFile(FileRequestDTO fileRequestDTO) {
+    public File uploadFile(FileRequestDTO fileRequestDTO, MultipartFile multipartFile) {
         User user = userRepository.findById(fileRequestDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -38,11 +43,13 @@ public class FileService {
         // 원래 filePath의 디렉토리 부분 유지, 파일명만 교체
         String newFilePath = replaceFileNameInPath(fileRequestDTO.getFilePath(), finalName);
 
+        String s3Url = s3Uploader.upload(multipartFile, bucket, "uploads");
+
         File file = File.builder()
                 .user(user)
                 .folder(folder)
                 .name(finalName)
-                .filePath(newFilePath)
+                .filePath(s3Url)
                 .fileType(fileRequestDTO.getFileType())
                 .size(fileRequestDTO.getSize())
                 .isDeleted(false)
