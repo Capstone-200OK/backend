@@ -3,6 +3,7 @@ package com.example.demo.repository;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +28,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     @Transactional
     @Modifying
     @Query("DELETE FROM Folder f WHERE f.id = :id")
-    void deleteById(@Param("id") Long id);
+    void deleteById(@Param("id") @NonNull Long id);
 
     boolean existsByUserIdAndParentFolderIdAndName(Long userId, Long parentFolderId, String name);
 
