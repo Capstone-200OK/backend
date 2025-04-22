@@ -1,8 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.sortingHistoryDTO.FileUpdateRequestDTO;
-import com.example.demo.dto.sortingHistoryDTO.FolderUpdateRequestDTO;
-import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.*;
 import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import jakarta.transaction.Transactional;
@@ -181,4 +179,24 @@ public class SortingHistoryService {
         }
         return depth;
     }
+
+    public SortingHistoryResponseDTO getSortingHistoryFiles(Long sortingId) {
+        List<FileSortingHistory> fileHistories = fileSortingHistoryRepository.findBySortingId(sortingId);
+
+        List<SortingHistoryFileResponseDTO> fileResponses = fileHistories.stream().map(history -> {
+            File file = history.getFile();
+            Folder previousFolder = history.getPreviousFolder();
+            Folder currentFolder = file.getFolder();
+
+            return new SortingHistoryFileResponseDTO(
+                    previousFolder.getName(),
+                    history.getPreviousFilePath(),
+                    currentFolder.getName(),
+                    file.getFilePath()
+            );
+        }).toList();
+
+        return new SortingHistoryResponseDTO(fileResponses);
+    }
+
 }
