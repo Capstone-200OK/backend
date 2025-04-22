@@ -5,6 +5,8 @@ import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.entity.File;
 import com.example.demo.service.FileService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +24,13 @@ public class FileController {
     public Long fileCount(@RequestParam Long id){
         return fileService.countByFolderId(id);
     }
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public FileDTO uploadFile(@RequestPart("meta") FileRequestDTO fileRequestDTO,
-                              @RequestPart("file") MultipartFile multipartFile) {
-        File file = fileService.uploadFile(fileRequestDTO,multipartFile);
+    @PostMapping("/upload")
+    public FileDTO uploadFile(
+            @RequestParam("meta") String metaJson,
+            @RequestPart("file") MultipartFile multipartFile) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        FileRequestDTO dto = objectMapper.readValue(metaJson, FileRequestDTO.class);
+        File file = fileService.uploadFile(dto, multipartFile);
         return FileDTO.fromEntity(file);
     }
 
