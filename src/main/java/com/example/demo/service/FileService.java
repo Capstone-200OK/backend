@@ -76,12 +76,13 @@ public class FileService {
         int counter = 1;
 
         while (fileRepository.existsByFolderIdAndNameAndIsDeletedFalse(folderId, newName)) {
-            newName = baseName + "_" + counter + extension;
+            newName = baseName + "(" + counter + ")" + extension;
             counter++;
         }
 
         return newName;
     }
+
     public long countByFolderId(Long folderId) {
         return fileRepository.countByFolderIdAndIsDeletedFalse(folderId);
     }
