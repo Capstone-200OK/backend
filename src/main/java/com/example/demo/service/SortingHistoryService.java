@@ -162,7 +162,7 @@ public class SortingHistoryService {
                 .map(Folder::getId)
                 .toList();
         for (Long id: folderIdsToDelete) {
-            folderRepository.deleteById(id);
+            folderRepository.deleteByFolderId(id);
         }
 
         // 4. sorting_history에서 기록 삭제
