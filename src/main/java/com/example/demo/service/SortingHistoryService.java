@@ -92,7 +92,8 @@ public class SortingHistoryService {
 
             int suffix = 1;
 
-            while (folderRepository.existsByUserIdAndParentFolderAndName(folder.getUser().getId(), parentFolder, newName)) {
+            while (folderRepository.existsByUserIdAndParentFolderAndNameAndIdNot(
+                    folder.getUser().getId(), parentFolder, newName, folder.getId())) {
                 newName = originalName + "(" + suffix + ")";
                 suffix++;
             }
@@ -119,7 +120,8 @@ public class SortingHistoryService {
             String candidateName = baseName + "." + fileType;
             int suffix = 1;
 
-            while (fileRepository.existsByFolderAndNameAndFileType(previousFolder, candidateName, fileType)) {
+            while (fileRepository.existsByFolderAndNameAndFileTypeAndIdNot(
+                    previousFolder, candidateName, fileType, file.getId())) {
                 candidateName = baseName + "(" + suffix + ")." + fileType;
                 suffix++;
             }
