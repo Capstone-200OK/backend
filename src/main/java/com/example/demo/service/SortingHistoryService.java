@@ -146,6 +146,7 @@ public class SortingHistoryService {
                 .findBySortingIdAndStatus(sortingId, FolderStatus.CREATED)
                 .stream()
                 .map(FolderSortingHistory::getFolder)
+                .sorted((f1, f2) -> Integer.compare(getFolderDepth(f2), getFolderDepth(f1))) // 깊이 내림차순 정렬
                 .toList();
 
         // 2. file_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
@@ -160,10 +161,22 @@ public class SortingHistoryService {
         List<Long> folderIdsToDelete = foldersToDelete.stream()
                 .map(Folder::getId)
                 .toList();
-        folderRepository.deleteAll(folderIdsToDelete);
+        for (Long id: folderIdsToDelete) {
+            folderRepository.deleteById(id);
+        }
 
         // 4. sorting_history에서 기록 삭제
         sortingHistoryRepository.deleteBySortingId(sortingId);
         sortingHistoryRepository.flush();
+    }
+
+    private int getFolderDepth(Folder folder) {
+        int depth = 0;
+        Folder current = folder.getParentFolder();
+        while (current != null) {
+            depth++;
+            current = current.getParentFolder();
+        }
+        return depth;
     }
 }
