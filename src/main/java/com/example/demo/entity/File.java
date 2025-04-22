@@ -40,6 +40,8 @@ public class File {
     @Column(nullable = false)
     private Long size;
 
+    private String fileUrl;
+
     @CreationTimestamp
     private Timestamp createdAt;
 
