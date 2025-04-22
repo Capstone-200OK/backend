@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
+import com.example.demo.dto.sortingHistoryDTO.SortingHistoryResponseDTO;
 import com.example.demo.service.SortingHistoryService;
 import com.example.demo.dto.MessageResponse;
 import lombok.RequiredArgsConstructor;
@@ -26,5 +27,11 @@ public class SortingHistoryController {
     public ResponseEntity<MessageResponse> rollbackSortingHistory(@PathVariable Long sortingId) {
         sortingHistoryService.rollbackSortingHistory(sortingId);
         return ResponseEntity.ok(new MessageResponse("자동 분류가 복구되었습니다."));
+    }
+
+    @GetMapping("/list/{sortingId}")
+    public ResponseEntity<SortingHistoryResponseDTO> getSortingHistoryFiles(@PathVariable Long sortingId) {
+        SortingHistoryResponseDTO response = sortingHistoryService.getSortingHistoryFiles(sortingId);
+        return ResponseEntity.ok(response);
     }
 }
