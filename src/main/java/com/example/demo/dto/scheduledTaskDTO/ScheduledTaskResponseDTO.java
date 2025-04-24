@@ -1,13 +1,16 @@
 package com.example.demo.dto.scheduledTaskDTO;
 
-import com.example.demo.entity.ScheduleInterval;
 import com.example.demo.entity.Criteria;
+import com.example.demo.entity.ScheduleInterval;
+import lombok.Builder;
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
-import lombok.*;
-
 @Data
-public class ScheduledTaskDTO {
+@Builder
+public class ScheduledTaskResponseDTO {
+    private Long taskId;
     private Long userId;
     private Long previousFolderId;
     private Long newFolderId;
@@ -15,4 +18,3 @@ public class ScheduledTaskDTO {
     private ScheduleInterval interval;
     private LocalDateTime nextExecuted;
 }
-
