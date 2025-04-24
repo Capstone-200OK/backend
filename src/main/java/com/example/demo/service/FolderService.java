@@ -94,7 +94,7 @@ public class FolderService {
     }
     @Transactional(readOnly = true)
     public FolderPythonRequestDTO getFolderHierarchy(Long folderId) {
-        Folder folder = folderRepository.findById(folderId)
+        Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
                 .orElseThrow(() -> new RuntimeException("Folder not found"));
 
         return buildFolderDTO(folder);
@@ -163,7 +163,7 @@ public class FolderService {
 
         // 2) 파일 목록 조회 -> FileDTO 변환
         //    (다른 방법: folder.getFiles() OneToMany가 있다면 바로 사용 가능)
-        List<File> files = fileRepository.findByFolderId(folder.getId());
+        List<File> files = fileRepository.findByFolderIdAndIsDeletedFalse(folder.getId());
         List<FilePythonRequestDTO> fileDTOList = files.stream()
                 .map(f -> new FilePythonRequestDTO(
                         f.getId(),
@@ -181,9 +181,9 @@ public class FolderService {
 
         // 3) 하위 폴더(자식)
         //    folder.getSubFolders()로 가져오거나, folderRepository.findByParentFolder(folder) 등
-        List<Folder> children = folder.getSubFolders();
-        List<FolderPythonRequestDTO> subFolderDTOs = children.stream()
-                .map(this::buildFolderDTO)  // 재귀 호출
+        List<FolderPythonRequestDTO> subFolderDTOs = folder.getSubFolders().stream()
+                .filter(child -> !child.getIsDeleted())  // 삭제된 것 필터링
+                .map(this::buildFolderDTO)               // 재귀 호출
                 .toList();
         dto.setSubFolders(subFolderDTOs);
 

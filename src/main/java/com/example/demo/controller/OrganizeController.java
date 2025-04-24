@@ -34,7 +34,7 @@ import java.util.Map;
 public class OrganizeController {
 
     private final RestTemplate restTemplate; // Python 서버와 통신용
-    private final String PYTHON_SERVER_URL = "http://localhost:5000"; // Python Flask
+    private final String PYTHON_SERVER_URL = "http://localhost:5050"; // Python Flask
     private final FileService fileService;
     private final FolderService folderService;
     private final FolderRepository folderRepository;

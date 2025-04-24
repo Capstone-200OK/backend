@@ -49,9 +49,10 @@ public class File {
 
     @UpdateTimestamp
     private Timestamp updatedAt;
-  
+
+    @Builder.Default
     @Column(name = "is_important", nullable = false)
-    private Boolean isImportant;
+    private Boolean isImportant = Boolean.FALSE;
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
