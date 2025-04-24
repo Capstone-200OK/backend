@@ -11,8 +11,8 @@ import com.example.demo.entity.Folder;
 public interface FileRepository extends JpaRepository<File, Long> {
     List<File> findByFolderId(Long folderId);
     // 부모 폴더 안에서 같은 이름+확장자의 파일이 존재하는지 확인
-    boolean existsByFolderAndNameAndFileTypeAndIdNot(Folder folder, String name, String fileType, Long id);
     List<File> findByFolderIdAndIsDeletedFalse(Long folderId);
     boolean existsByFolderIdAndNameAndIsDeletedFalse(Long folderId, String name);
+    boolean existsByFolderIdAndNameAndIdNotAndIsDeletedFalse(Long folderId, String name, Long id);
     long countByFolderIdAndIsDeletedFalse(Long folderId);
 }

@@ -29,9 +29,8 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     @Modifying
     @Query("DELETE FROM Folder f WHERE f.id = :id")
     void deleteByFolderId(@Param("id") @NonNull Long id);
-
-    boolean existsByUserIdAndParentFolderAndNameAndIdNot(Long userId, Folder parent, String name, Long id);
-    boolean existsByUserIdAndParentFolderIdAndNameAndIsDeletedFalse(Long userId, Long parentFolderId, String name);
+    boolean existsByParentFolderIdAndNameAndIsDeletedFalse(Long parentFolderId, String name);
+    boolean existsByParentFolderIdAndNameAndIdNotAndIsDeletedFalse(Long parentFolderId, String name, Long id);
     // 또는 parent가 null인 경우를 위해 별도로:
     boolean existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(Long userId, String name);
     boolean existsByUserIdAndParentFolderIsNullAndName(Long userId, String name);
