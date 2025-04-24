@@ -22,9 +22,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     Optional<Folder> findByNameAndParentFolderIsNullAndUser(String name, User user);
     List<Folder> findByParentFolderId(Long parentFolderId);
 
-    // 부모 폴더 안에서 같은 이름의 폴더가 존재하는지 확인
-    boolean existsByUserIdAndParentFolderAndName(Long userId, Folder parentFolder, String name);
-
     @Transactional
     @Modifying
     @Query("DELETE FROM Folder f WHERE f.id = :id")
