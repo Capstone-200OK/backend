@@ -8,10 +8,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 public interface SortingHistoryRepository extends JpaRepository<SortingHistory, Long> {
     @Modifying
     @Transactional
     @Query("DELETE FROM SortingHistory f WHERE f.id = :sortingId")
     void deleteBySortingId(@Param("sortingId") Long sortingId);
+    List<SortingHistory> findAllByUserIdOrderBySortedAtDesc(Long userId);
 }

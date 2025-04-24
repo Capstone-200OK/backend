@@ -7,7 +7,11 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -178,7 +182,28 @@ public class SortingHistoryService {
         return depth;
     }
 
-    public SortingHistoryResponseDTO getSortingHistoryFiles(Long sortingId) {
+    @Transactional
+    public List<SortingHistoryResponseDTO> getSortingHistoryFiles(Long userId) {
+        List<SortingHistory> historyList = sortingHistoryRepository.findAllByUserIdOrderBySortedAtDesc(userId);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        return historyList.stream()
+                .map(history -> {
+                    LocalDateTime localDateTime = history.getSortedAt().toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDateTime();
+
+                    return new SortingHistoryResponseDTO(
+                            String.valueOf(history.getId()),
+                            history.getUser().getId(),
+                            localDateTime.format(formatter)
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    public SortingHistorySelectedResponseDTO getSortingHistorySelectedFiles(Long sortingId) {
         List<FileSortingHistory> fileHistories = fileSortingHistoryRepository.findBySortingId(sortingId);
 
         List<SortingHistoryFileResponseDTO> fileResponses = fileHistories.stream().map(history -> {
@@ -194,7 +219,7 @@ public class SortingHistoryService {
             );
         }).toList();
 
-        return new SortingHistoryResponseDTO(fileResponses);
+        return new SortingHistorySelectedResponseDTO(fileResponses);
     }
 
 }
