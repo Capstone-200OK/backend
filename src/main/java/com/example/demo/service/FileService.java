@@ -51,7 +51,7 @@ public class FileService {
 
         // 썸네일 요청
         RestTemplate restTemplate = new RestTemplate();
-        String thumbnailApi = "http://localhost:5000/api/thumbnail"; // Python 서버 주소
+        String thumbnailApi = "http://localhost:5050/api/thumbnail"; // Python 서버 주소
 
         Map<String, String> request = new HashMap<>();
         request.put("fileUrl", s3Url); // 원본 파일 S3 URL

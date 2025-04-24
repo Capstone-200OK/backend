@@ -15,4 +15,5 @@ public interface FileRepository extends JpaRepository<File, Long> {
     List<File> findByFolderIdAndIsDeletedFalse(Long folderId);
     boolean existsByFolderIdAndNameAndIsDeletedFalse(Long folderId, String name);
     long countByFolderIdAndIsDeletedFalse(Long folderId);
+
 }
