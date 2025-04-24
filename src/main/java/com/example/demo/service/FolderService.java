@@ -122,21 +122,16 @@ public class FolderService {
     private String resolveDuplicateFolderName(Long userId, Long parentFolderId, String baseName) {
         String newName = baseName;
         int counter = 1;
-        boolean exists;
 
         if (parentFolderId == null) {
-            exists = folderRepository.existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(userId, newName);
-            while (exists) {
+            while (folderRepository.existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(userId, newName)) {
                 newName = baseName + "(" + counter + ")";
                 counter++;
-                exists = folderRepository.existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(userId, newName);
             }
         } else {
-            exists = folderRepository.existsByUserIdAndParentFolderIdAndNameAndIsDeletedFalse(userId, parentFolderId, newName);
-            while (exists) {
+            while (folderRepository.existsByParentFolderIdAndNameAndIsDeletedFalse(parentFolderId, newName)) {
                 newName = baseName + "(" + counter + ")";
                 counter++;
-                exists = folderRepository.existsByUserIdAndParentFolderIdAndNameAndIsDeletedFalse(userId, parentFolderId, newName);
             }
         }
 

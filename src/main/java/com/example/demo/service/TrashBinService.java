@@ -121,6 +121,25 @@ public class TrashBinService {
                 throw new RuntimeException("상위 폴더가 삭제된 상태에서는 복구할 수 없습니다.");
             }
 
+            String originalName = file.getName();
+            String baseName = originalName;
+            String extension = "";
+
+            int dotIndex = originalName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                baseName = originalName.substring(0, dotIndex);
+                extension = originalName.substring(dotIndex);
+            }
+
+            String newName = originalName;
+            int counter = 1;
+
+            while (fileRepository.existsByFolderIdAndNameAndIdNotAndIsDeletedFalse(parent.getId(), newName, file.getId())) {
+                newName = baseName + "(" + counter + ")" + extension;
+                counter++;
+            }
+
+            file.setName(newName);
             file.setIsDeleted(false);
         }
 
@@ -148,8 +167,7 @@ public class TrashBinService {
         String newFolderName = originalFolderName;
         int folderSuffix = 1;
 
-        while (folderRepository.existsByUserIdAndParentFolderAndNameAndIdNot(
-                folder.getUser().getId(), parentFolder, newFolderName, folder.getId())) {
+        while (folderRepository.existsByParentFolderIdAndNameAndIdNotAndIsDeletedFalse(parentFolder.getId(), newFolderName, folder.getId())) {
             newFolderName = originalFolderName + "(" + folderSuffix + ")";
             folderSuffix++;
         }
@@ -159,28 +177,27 @@ public class TrashBinService {
         // 파일 복구
         List<File> files = fileRepository.findByFolderId(folder.getId());
         for (File file : files) {
-            Folder fileParent = folder;
+            String originalName = file.getName();
+            String baseName = originalName;
+            String extension = "";
 
-            String originalFileName = file.getName();
-            String fileType = file.getFileType();
-
-            String baseName = originalFileName;
-            if (originalFileName.toLowerCase().endsWith("." + fileType)) {
-                baseName = originalFileName.substring(0, originalFileName.length() - (fileType.length() + 1));
-            }
-            baseName = baseName.replaceAll("\\(\\d+\\)$", "");
-
-            String candidateName = baseName + "." + fileType;
-            int suffix = 1;
-
-            while (fileRepository.existsByFolderAndNameAndFileTypeAndIdNot(
-                    fileParent, candidateName, fileType, file.getId())) {
-                candidateName = baseName + "(" + suffix + ")." + fileType;
-                suffix++;
+            int dotIndex = originalName.lastIndexOf('.');
+            if (dotIndex != -1) {
+                baseName = originalName.substring(0, dotIndex);
+                extension = originalName.substring(dotIndex);
             }
 
-            file.setName(candidateName);
+            String newName = originalName;
+            int counter = 1;
+
+            while (fileRepository.existsByFolderIdAndNameAndIdNotAndIsDeletedFalse(folder.getId(), newName, file.getId())) {
+                newName = baseName + "(" + counter + ")" + extension;
+                counter++;
+            }
+
+            file.setName(newName);
             file.setIsDeleted(false);
+            fileRepository.save(file);
         }
 
         // 하위 폴더 복구 재귀
