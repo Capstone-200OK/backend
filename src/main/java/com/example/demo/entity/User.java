@@ -27,6 +27,8 @@ public class User implements UserDetails {
     private String email;
     private String password;
     private String nickName;
+    @Column(name = "is_admin", nullable = false)
+    private boolean isAdmin;
     @Column(nullable = false)
     @CreationTimestamp
     private Timestamp createdAt;
