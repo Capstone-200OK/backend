@@ -177,7 +177,9 @@ public class FolderService {
                         f.getFileType(),
                         f.getSize(),
                         f.getIsDeleted(),
-                        f.getCreatedAt()
+                        f.getCreatedAt(),
+                        f.getFileUrl(),
+                        f.getFileThumbUrl()
                 ))
                 .toList();
         dto.setFiles(fileDTOList);
