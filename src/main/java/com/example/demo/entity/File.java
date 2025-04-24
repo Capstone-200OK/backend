@@ -42,12 +42,14 @@ public class File {
 
     private String fileUrl;
 
+    private String fileThumbUrl;
+
     @CreationTimestamp
     private Timestamp createdAt;
 
     @UpdateTimestamp
     private Timestamp updatedAt;
-
+  
     @Column(name = "is_important", nullable = false)
     private Boolean isImportant;
 

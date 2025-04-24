@@ -12,11 +12,15 @@ import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +49,18 @@ public class FileService {
 
         String s3Url = s3Uploader.upload(multipartFile, bucket, "uploads");
 
+        // 썸네일 요청
+        RestTemplate restTemplate = new RestTemplate();
+        String thumbnailApi = "http://localhost:5000/api/thumbnail"; // Python 서버 주소
+
+        Map<String, String> request = new HashMap<>();
+        request.put("fileUrl", s3Url); // 원본 파일 S3 URL
+        request.put("fileName", finalName); // 예: report.docx
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(thumbnailApi, request, Map.class);
+        String thumbnailUrl = (String) response.getBody().get("thumbnailUrl");
+
+
         File file = File.builder()
                 .user(user)
                 .folder(folder)
@@ -54,6 +70,7 @@ public class FileService {
                 .size(fileRequestDTO.getSize())
                 .isDeleted(false)
                 .fileUrl(s3Url)
+                .fileThumbUrl(thumbnailUrl)
                 .build();
 
         return fileRepository.save(file);

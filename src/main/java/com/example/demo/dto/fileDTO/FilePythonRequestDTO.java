@@ -17,4 +17,6 @@ public class FilePythonRequestDTO {
     private Long size;
     private Boolean isDeleted;
     private Timestamp createdAt;
+    private String fileUrl;
+    private String fileThumbUrl;
 }
