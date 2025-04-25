@@ -42,6 +42,10 @@ public class Folder {
     @CreationTimestamp
     private Timestamp createdAt;
 
+    @Column(name = "folder_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private FolderType folderType;
+
     @Column(name = "is_important", nullable = false)
     private Boolean isImportant;
 
