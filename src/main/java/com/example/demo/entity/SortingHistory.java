@@ -25,5 +25,8 @@ public class SortingHistory {
 
     @CreationTimestamp
     private Timestamp sortedAt;
+
+    @Column(name = "is_maintain", nullable = false)
+    private Boolean isMaintain;
 }
 
