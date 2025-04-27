@@ -16,6 +16,7 @@ import java.util.Optional;
 @RequestMapping("/folder")
 @RequiredArgsConstructor
 public class FolderController {
+
     private final FolderService folderService;
 
     @PostMapping("/add")
@@ -23,27 +24,20 @@ public class FolderController {
         Folder created = folderService.addFolder(request);
         return FolderDTO.fromEntity(created);
     }
+
     @PostMapping("/find")
-    public Map<String, Object> findFolderName(@RequestBody FolderRequestDTO folderRequestDTO) {
-        Optional<Folder> found = folderService.findFolderByName(folderRequestDTO);
+    public Map<String, Object> findFolderName(@RequestBody FolderRequestDTO request) {
+        Optional<Folder> found = folderService.findFolderByName(request);
 
         Map<String, Object> result = new HashMap<>();
-        if (found.isPresent()) {
-            // 폴더가 있
-            Folder folder = found.get();
-            result.put("found", true);
-            result.put("folderId", folder.getId());
-        } else {
-            // 폴더가 없음
-            result.put("found", false);
-            result.put("folderId", null);
-        }
-        return result; // JSON으로 { "found":true, "folderId":1 } or { "found":false, "folderId":null }
+        result.put("found", found.isPresent());
+        result.put("folderId", found.map(Folder::getId).orElse(null));
+        return result;
     }
 
     @PostMapping("/findOrCreate")
-    public Folder findOrCreateFolder(@RequestBody FolderRequestDTO folderRequestDTO) {
-        return folderService.findOrCreateFolder(folderRequestDTO);
+    public Folder findOrCreateFolder(@RequestBody FolderRequestDTO request) {
+        return folderService.findOrCreateFolder(request);
     }
 
     @GetMapping("/id-by-path")
@@ -57,18 +51,22 @@ public class FolderController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/hierarchy/{folderId}/{userId}")
+    public FolderPythonRequestDTO getFolderHierarchy(
+            @PathVariable Long folderId,
+            @PathVariable Long userId
+    ) {
+        return folderService.getFolderHierarchy(folderId, userId);
+    }
+
     public record FolderDTO(Long id, String name, Long parentId, Long userId) {
         public static FolderDTO fromEntity(Folder folder) {
             return new FolderDTO(
                     folder.getId(),
                     folder.getName(),
-                    folder.getParentFolder() == null ? null : folder.getParentFolder().getId(),
+                    folder.getParentFolder() != null ? folder.getParentFolder().getId() : null,
                     folder.getUser().getId()
             );
         }
-    }
-    @GetMapping("/hierarchy/{folderId}")
-    public FolderPythonRequestDTO getFolderHierarchy(@PathVariable Long folderId) {
-        return folderService.getFolderHierarchy(folderId);
     }
 }

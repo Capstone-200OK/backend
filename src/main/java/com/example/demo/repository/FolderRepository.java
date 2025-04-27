@@ -1,6 +1,7 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.Folder;
+import com.example.demo.entity.FolderType;
 import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
@@ -21,7 +22,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     // 2) 부모가 null인 폴더를 찾기 위한 별도 메서드 (루트 폴더용)
     Optional<Folder> findByNameAndParentFolderIsNullAndUser(String name, User user);
     List<Folder> findByParentFolderId(Long parentFolderId);
-
+    List<Folder> findByUserIdAndIsDeletedFalseAndFolderType(Long userId, FolderType folderType);
     @Transactional
     @Modifying
     @Query("DELETE FROM Folder f WHERE f.id = :id")

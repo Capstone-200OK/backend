@@ -158,7 +158,7 @@ public class OrganizeController {
             folderUpdates.add(folderUpdate);
         }
 
-
+        // 추가: 기존 파일 삭제 / 기존 파일 삭제 안해 여부도 전달하기
         SortingHistoryRequestDTO historyRequest = SortingHistoryRequestDTO.builder()
                 .userId(userId)
                 .fileUpdates(fileUpdates)
