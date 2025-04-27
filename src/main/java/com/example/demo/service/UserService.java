@@ -19,10 +19,12 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("등록되지 않은 이메일입니다."));
 
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if (!encoder.matches(loginDTO.getPassword(), user.getPassword())) {
+        /*if (!encoder.matches(loginDTO.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }*/
+        if (!loginDTO.getPassword().equals(user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-
         return new UserResponseDTO(user.getId());
     }
     public void signup(UserDTO userDTO) {
@@ -39,4 +41,9 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
 }
