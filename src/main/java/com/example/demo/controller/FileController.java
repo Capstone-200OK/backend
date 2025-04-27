@@ -50,8 +50,8 @@ public class FileController {
     }*/
 
     @GetMapping("/list")
-    public ResponseEntity<List<FileDTO>> getFilesByFolder(@RequestParam Long folderId) {
-        List<File> files = fileService.getFilesByFolder(folderId);
+    public ResponseEntity<List<FileDTO>> getFilesByFolder(@RequestParam Long folderId, @RequestParam Long userId) {
+        List<File> files = fileService.getFilesByFolder(folderId, userId);
         List<FileDTO> response = files.stream()
                 .map(FileDTO::fromEntity)
                 .toList();
