@@ -37,6 +37,7 @@ public class SortingHistoryService {
         // 정리 기록 생성 및 저장
         SortingHistory sorting = SortingHistory.builder()
                 .user(user)
+                .isMaintain(request.getIsMaintain())
                 .build();
         sortingHistoryRepository.save(sorting);
 
@@ -82,7 +83,20 @@ public class SortingHistoryService {
 
     @Transactional
     public void rollbackSortingHistory(Long sortingId) {
-        sortingHistoryRepository.findById(sortingId).orElseThrow(() -> new RuntimeException("정리 기록이 존재하지 않습니다."));
+        SortingHistory sortingHistory = sortingHistoryRepository.findById(sortingId)
+                .orElseThrow(() -> new RuntimeException("정리 기록이 존재하지 않습니다."));
+
+        if (sortingHistory.getIsMaintain()) {
+            // 유지하는 경우 (isMaintain = true)
+            rollbackWhenMaintain(sortingId);
+        } else {
+            // 유지하지 않는 경우 (isMaintain = false)
+            rollbackWhenNotMaintain(sortingId);
+        }
+    }
+
+    @Transactional
+    public void rollbackWhenNotMaintain(Long sortingId) {
 
         // 1. 삭제됐던 폴더 복구
         folderSortingHistoryRepository.findBySortingIdAndStatus(sortingId, FolderStatus.DELETED).forEach(record -> {
@@ -163,8 +177,53 @@ public class SortingHistoryService {
         List<Long> folderIdsToDelete = foldersToDelete.stream()
                 .map(Folder::getId)
                 .toList();
-        for (Long id: folderIdsToDelete) {
-            folderRepository.deleteByFolderId(id);
+        for (Long id : folderIdsToDelete) {
+            boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
+            boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
+
+            if (!hasFiles && !hasSubFolders) {
+                folderRepository.deleteByFolderId(id);
+            }
+        }
+
+        // 4. sorting_history에서 기록 삭제
+        sortingHistoryRepository.deleteBySortingId(sortingId);
+        sortingHistoryRepository.flush();
+    }
+
+    @Transactional
+    public void rollbackWhenMaintain(Long sortingId) {
+        // 1. 파일 삭제
+        fileSortingHistoryRepository.findBySortingId(sortingId).forEach(record -> fileRepository.delete(record.getFile()));
+
+        // 2. 생성됐던 폴더 삭제
+        // 1. 먼저 CREATED 상태의 folder들을 리스트로 저장
+        List<Folder> foldersToDelete = folderSortingHistoryRepository
+                .findBySortingIdAndStatus(sortingId, FolderStatus.CREATED)
+                .stream()
+                .map(FolderSortingHistory::getFolder)
+                .sorted((f1, f2) -> Integer.compare(getFolderDepth(f2), getFolderDepth(f1))) // 깊이 내림차순 정렬
+                .toList();
+
+        // 2. file_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
+        fileSortingHistoryRepository.deleteAllBySortingId(sortingId);
+        fileSortingHistoryRepository.flush();
+
+        // 2. folder_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
+        folderSortingHistoryRepository.deleteAllBySortingId(sortingId);
+        folderSortingHistoryRepository.flush();
+
+        // 3. folders 직접 삭제 (ID 기반)
+        List<Long> folderIdsToDelete = foldersToDelete.stream()
+                .map(Folder::getId)
+                .toList();
+        for (Long id : folderIdsToDelete) {
+            boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
+            boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
+
+            if (!hasFiles && !hasSubFolders) {
+                folderRepository.deleteByFolderId(id);
+            }
         }
 
         // 4. sorting_history에서 기록 삭제
