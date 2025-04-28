@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.sql.Timestamp;
@@ -46,10 +47,12 @@ public class Folder {
     @Enumerated(EnumType.STRING)
     private FolderType folderType;
 
-    @Builder.Default
     @Column(name = "is_important", nullable = false)
+    @ColumnDefault("false")
     private Boolean isImportant = Boolean.FALSE;
 
+
     @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted;
+    @ColumnDefault("false")
+    private Boolean isDeleted = Boolean.FALSE;
 }

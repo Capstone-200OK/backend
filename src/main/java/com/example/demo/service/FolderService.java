@@ -236,7 +236,7 @@ public class FolderService {
                 })
                 .map(f -> new FilePythonRequestDTO(
                         f.getId(), f.getName(), f.getFilePath(), f.getFileType(),
-                        f.getSize(), f.getIsDeleted(), f.getCreatedAt(), f.getFileUrl(), f.getFileThumbUrl()
+                        f.getSize(), f.getIsImportant(), f.getIsDeleted(), f.getCreatedAt(), f.getFileUrl(), f.getFileThumbUrl()
                 ))
                 .toList();
         dto.setFiles(fileDTOList);

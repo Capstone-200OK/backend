@@ -3,6 +3,7 @@ package com.example.demo.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -50,10 +51,11 @@ public class File {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
-    @Builder.Default
     @Column(name = "is_important", nullable = false)
+    @ColumnDefault("false")
     private Boolean isImportant = Boolean.FALSE;
 
     @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted;
+    @ColumnDefault("false")
+    private Boolean isDeleted = Boolean.FALSE;
 }

@@ -59,12 +59,13 @@ public class FileController {
     }
 
 
-    public record FileDTO(Long id, String name, Long folderId) {
+    public record FileDTO(Long id, String name, Long folderId, Boolean isImportant) {
         public static FileDTO fromEntity(File file) {
             return new FileDTO(
                     file.getId(),
                     file.getName(),
-                    file.getFolder() == null ? null : file.getFolder().getId()
+                    file.getFolder() == null ? null : file.getFolder().getId(),
+                    file.getIsImportant()
             );
         }
     }
