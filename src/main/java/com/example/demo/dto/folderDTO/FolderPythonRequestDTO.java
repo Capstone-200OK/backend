@@ -15,6 +15,7 @@ public class FolderPythonRequestDTO {
     private Long id;
     private String name;
     private Boolean isDeleted;
+    private Boolean isImportant;
     private List<FolderPythonRequestDTO> subFolders = new ArrayList<>();
     private List<FilePythonRequestDTO> files = new ArrayList<>();
 }

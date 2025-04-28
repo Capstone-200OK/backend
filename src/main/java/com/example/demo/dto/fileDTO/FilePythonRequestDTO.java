@@ -15,6 +15,7 @@ public class FilePythonRequestDTO {
     private String filePath;
     private String fileType;
     private Long size;
+    private Boolean isImportant;
     private Boolean isDeleted;
     private Timestamp createdAt;
     private String fileUrl;
