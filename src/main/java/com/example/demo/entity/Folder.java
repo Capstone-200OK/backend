@@ -42,8 +42,13 @@ public class Folder {
     @CreationTimestamp
     private Timestamp createdAt;
 
+    @Column(name = "folder_type", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private FolderType folderType;
+
+    @Builder.Default
     @Column(name = "is_important", nullable = false)
-    private Boolean isImportant;
+    private Boolean isImportant = Boolean.FALSE;
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted;
