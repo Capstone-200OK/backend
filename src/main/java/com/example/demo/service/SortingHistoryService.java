@@ -194,9 +194,7 @@ public class SortingHistoryService {
     @Transactional
     public void rollbackWhenMaintain(Long sortingId) {
         // 1. 파일 삭제
-        fileSortingHistoryRepository.findBySortingId(sortingId).forEach(record -> {
-            fileRepository.delete(record.getFile());
-        });
+        fileSortingHistoryRepository.findBySortingId(sortingId).forEach(record -> fileRepository.delete(record.getFile()));
 
         // 2. 생성됐던 폴더 삭제
         // 1. 먼저 CREATED 상태의 folder들을 리스트로 저장
