@@ -1,9 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.MessageResponse;
-import com.example.demo.dto.sortingHistoryDTO.SortingHistoryRequestDTO;
-import com.example.demo.dto.sortingHistoryDTO.SortingHistoryResponseDTO;
-import com.example.demo.dto.sortingHistoryDTO.SortingHistorySelectedResponseDTO;
+import com.example.demo.dto.sortingHistoryDTO.*;
 import com.example.demo.service.SortingHistoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +39,13 @@ public class SortingHistoryController {
     @GetMapping("/selectedList/{sortingId}")
     public ResponseEntity<SortingHistorySelectedResponseDTO> getSortingHistorySelectedFiles(@PathVariable Long sortingId) {
         SortingHistorySelectedResponseDTO response = sortingHistoryService.getSortingHistorySelectedFiles(sortingId);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/latest-id/{userId}")
+    public ResponseEntity<SortingHistoryLatestIdResponseDTO> getLatestSortingHistoryId(@PathVariable Long userId) {
+        Long latestId = sortingHistoryService.getLatestSortingHistoryId(userId);
+        SortingHistoryLatestIdResponseDTO response = new SortingHistoryLatestIdResponseDTO(latestId);
         return ResponseEntity.ok(response);
     }
 }
