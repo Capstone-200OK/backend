@@ -23,6 +23,7 @@ public class SortingHistoryService {
     private final UserRepository userRepository;
     private final FileRepository fileRepository;
     private final FolderRepository folderRepository;
+    private final FolderAccessRepository folderAccessRepository;
 
     @Transactional
     public void saveSortingHistory(SortingHistoryRequestDTO request) {
@@ -178,6 +179,9 @@ public class SortingHistoryService {
                 .map(Folder::getId)
                 .toList();
         for (Long id : folderIdsToDelete) {
+            // ✅ (1) folder_access 먼저 삭제
+            folderAccessRepository.deleteAllByFolderId(id);
+
             boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
             boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
 
@@ -218,6 +222,9 @@ public class SortingHistoryService {
                 .map(Folder::getId)
                 .toList();
         for (Long id : folderIdsToDelete) {
+            // ✅ (1) folder_access 먼저 삭제
+            folderAccessRepository.deleteAllByFolderId(id);
+
             boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
             boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
 
