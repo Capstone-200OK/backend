@@ -8,6 +8,7 @@ import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -46,4 +47,11 @@ public class UserService {
         return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    @Transactional
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("User not found");
+        }
+        userRepository.deleteById(userId);
+    }
 }
