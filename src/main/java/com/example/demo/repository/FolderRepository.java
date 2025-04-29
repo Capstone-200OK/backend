@@ -37,4 +37,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     Optional<Folder> findByIdAndIsDeletedFalse(@Param("id") Long id);
 
     boolean existsByParentFolderIdAndIsDeletedFalse(Long parentFolderId);
+
+    List<Folder> findAllByIsDeletedFalse();
 }

@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
+import com.example.demo.dto.folderDTO.FolderSelectableDTO;
 import com.example.demo.entity.Folder;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -57,6 +59,11 @@ public class FolderController {
             @PathVariable Long userId
     ) {
         return folderService.getFolderHierarchy(folderId, userId);
+    }
+
+    @GetMapping("/selectable/{userId}")
+    public List<FolderSelectableDTO> getSelectableFolders(@PathVariable Long userId) {
+        return folderService.findSelectableFolders(userId);
     }
 
     public record FolderDTO(Long id, String name, Long parentId, Long userId) {

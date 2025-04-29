@@ -47,6 +47,7 @@ public class Folder {
     @Enumerated(EnumType.STRING)
     private FolderType folderType;
 
+    @Builder.Default
     @Column(name = "is_important", nullable = false)
     @ColumnDefault("false")
     private Boolean isImportant = Boolean.FALSE;
