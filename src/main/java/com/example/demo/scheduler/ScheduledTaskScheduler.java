@@ -1,7 +1,10 @@
 package com.example.demo.scheduler;
 
+import com.example.demo.entity.Folder;
 import com.example.demo.entity.ScheduledTask;
+import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.ScheduledTaskRepository;
+import com.example.demo.service.FolderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
@@ -20,38 +23,42 @@ import java.util.Map;
 public class ScheduledTaskScheduler {
 
     private final ScheduledTaskRepository taskRepository;
-    private final RestTemplate restTemplate = new RestTemplate(); // 혹은 @Bean으로 등록해도 OK
+    private final FolderService folderService;
+    private final FolderRepository folderRepository;
+    private final RestTemplate restTemplate = new RestTemplate();
 
-    private static final String BASE_URL = "http://localhost:8080"; // 실제 Base_URL로 수정
+    private static final String BASE_URL = "http://localhost:8080";
 
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 * * * *") //
     @Transactional
     public void executeScheduledTasks() {
         LocalDateTime now = LocalDateTime.now();
-        List<ScheduledTask> dueTasks = taskRepository.findByNextExecutedBeforeOrNextExecutedEquals(now, now);
+        List<ScheduledTask> dueTasks = taskRepository.findByNextExecutedLessThanEqual(now);
 
         for (ScheduledTask task : dueTasks) {
             try {
-                String apiUrl = BASE_URL + "/organize/start";
+                Folder previousFolder = task.getPreviousFolder();
+                Folder destinationFolder = task.getNewFolder();
+
+                String outputPath = folderService.buildFullPath(destinationFolder);
 
                 Map<String, Object> body = Map.of(
-                        "folderId", task.getPreviousFolder().getId(),
-                        "mode", task.getCriteria().name().toLowerCase(), // 소문자, 대문자 해결하기
-                        "destinationFolderId", task.getNewFolder().getId()
+                        "folderIds", List.of(previousFolder.getId()),  // ✅ 리스트로 전달
+                        "mode", task.getCriteria().name().toLowerCase(),
+                        "destinationFolderId", destinationFolder.getId(),
+                        "userId", task.getUser().getId(),
+                        "output_path", outputPath
                 );
 
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.APPLICATION_JSON);
-
                 HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-                restTemplate.postForObject(apiUrl, request, String.class);
+                restTemplate.postForObject(BASE_URL + "/organize/start", request, String.class);
 
                 System.out.println("[ScheduledTask] 실행됨: taskId=" + task.getId());
 
-                // 실행 이후 다음 실행일 갱신 (예: interval 기준)
                 updateNextExecuted(task, now);
-
             } catch (Exception e) {
                 System.err.println("예약 작업 실행 중 오류: " + e.getMessage());
             }
