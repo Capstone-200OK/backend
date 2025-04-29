@@ -4,6 +4,7 @@ import com.example.demo.dto.fileDTO.FilePythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.dto.folderDTO.FolderResult;
+import com.example.demo.dto.folderDTO.FolderSelectableDTO;
 import com.example.demo.entity.*;
 import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
@@ -126,17 +127,14 @@ public class FolderService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (folder.getFolderType() == FolderType.PERSONAL) {
-            // ✅ 개인 폴더일 경우
-            if (!isPersonalRoot(folder)) {
-                Folder root = getTopAncestor(folder);
-                if (!root.getUser().getId().equals(user.getId())) {
+            if (!isPersonalRoot(folder)) { // ✅ 루트가 아닌 경우만 검사
+                if (!folder.getUser().getId().equals(user.getId())) {
                     throw new RuntimeException("No access to this personal folder.");
                 }
             }
+            // 루트 personal 폴더는 모든 user 허용
         } else {
-            // ✅ 클라우드 폴더일 경우
             if (!isCloudRoot(folder)) {
-                // 루트 Cloud 폴더는 모든 사용자 허용, 그 외는 권한 필요
                 if (!folderAccessService.canAccess(user, folder)) {
                     throw new RuntimeException("No access to this cloud folder.");
                 }
@@ -146,6 +144,7 @@ public class FolderService {
         return buildFolderDTO(folder, user);
     }
 
+
     private boolean isPersonalRoot(Folder folder) {
         return folder.getParentFolder() == null && folder.getFolderType() == FolderType.PERSONAL;
     }
@@ -153,15 +152,6 @@ public class FolderService {
     private boolean isCloudRoot(Folder folder) {
         return folder.getParentFolder() == null && folder.getFolderType() == FolderType.CLOUD;
     }
-
-    private Folder getTopAncestor(Folder folder) {
-        Folder current = folder;
-        while (current.getParentFolder() != null) {
-            current = current.getParentFolder();
-        }
-        return current;
-    }
-
 
     @Transactional
     public Long getFolderIdByPath(Long userId, String path) {
@@ -258,6 +248,31 @@ public class FolderService {
         dto.setSubFolders(subFolderDTOs);
         return dto;
     }
+
+    @Transactional
+    public List<FolderSelectableDTO> findSelectableFolders(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<Folder> allFolders = folderRepository.findAllByIsDeletedFalse();
+
+        return allFolders.stream()
+                .filter(folder -> {
+                    if (folder.getFolderType() == FolderType.PERSONAL) {
+                        return folder.getUser() != null && folder.getUser().getId().equals(user.getId());
+                    } else { // CLOUD
+                        return folderAccessService.hasFullPermission(user, folder);
+                    }
+                })
+                .map(folder -> new FolderSelectableDTO(
+                        folder.getId(),
+                        folder.getName(),
+                        folder.getParentFolder() != null ? folder.getParentFolder().getId() : null,
+                        folder.getFolderType()
+                ))
+                .toList();
+    }
+
 
     public Folder getFolderById(Long id) {
         return folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));

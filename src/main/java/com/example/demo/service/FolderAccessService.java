@@ -101,4 +101,10 @@ public class FolderAccessService {
                 .filter(folder -> folder.getName().equals(name))
                 .findFirst();
     }
+    public boolean hasFullPermission(User user, Folder folder) {
+        return folderAccessRepository.findByUserIdAndFolderId(user.getId(), folder.getId())
+                .map(access -> access.getChmod() == 7)
+                .orElse(false);
+    }
+
 }

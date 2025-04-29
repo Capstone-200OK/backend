@@ -51,6 +51,7 @@ public class File {
     @UpdateTimestamp
     private Timestamp updatedAt;
 
+    @Builder.Default
     @Column(name = "is_important", nullable = false)
     @ColumnDefault("false")
     private Boolean isImportant = Boolean.FALSE;
