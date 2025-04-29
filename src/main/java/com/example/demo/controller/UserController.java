@@ -1,8 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.UserDTO.LoginDTO;
-import com.example.demo.dto.UserDTO.UserDTO;
-import com.example.demo.dto.UserDTO.UserResponseDTO;
+import com.example.demo.dto.UserDTO.*;
+import com.example.demo.dto.MessageResponse;
 import com.example.demo.entity.User;
 import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -25,8 +24,10 @@ public class UserController {
         userService.signup(userDTO); // 예외 나면 아래 코드 실행 안 됨
         return ResponseEntity.ok(true);
     }
-    @GetMapping("/register")
-    public String regiter() {
-        return "register.html";
+
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<MessageResponse> deleteUser(@PathVariable("userId") Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok(new MessageResponse("회원 탈퇴 성공"));
     }
 }
