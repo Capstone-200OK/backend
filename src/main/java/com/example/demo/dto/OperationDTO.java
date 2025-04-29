@@ -9,8 +9,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OperationDTO {
     // private Long folderId;
-    private String destination;  // 새 경로
+    private String source;
+    private String destination;
+    private String linkType;
     private Long fileId;
     private String name;
+    private String fileType;
+    private Long size; // ✅ 반드시 추가
     // 필요한 필드가 더 있으면 추가 (ex: fileId, userId 등)
 }

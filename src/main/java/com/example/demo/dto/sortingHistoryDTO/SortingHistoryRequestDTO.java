@@ -13,9 +13,10 @@ public class SortingHistoryRequestDTO {
     private List<FolderUpdateRequestDTO> folderUpdates;
 
     @Builder
-    public SortingHistoryRequestDTO(Long userId, List<FileUpdateRequestDTO> fileUpdates, List<FolderUpdateRequestDTO> folderUpdates) {
+    public SortingHistoryRequestDTO(Long userId, Boolean isMaintain ,List<FileUpdateRequestDTO> fileUpdates, List<FolderUpdateRequestDTO> folderUpdates) {
         this.userId = userId;
         this.fileUpdates = fileUpdates;
         this.folderUpdates = folderUpdates;
+        this.isMaintain = isMaintain;
     }
 }

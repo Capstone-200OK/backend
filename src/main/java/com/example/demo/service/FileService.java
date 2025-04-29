@@ -138,11 +138,14 @@ public class FileService {
         User user = file.getUser();
 
         //  이동 권한 체크
-        if (targetFolder.getFolderType() == FolderType.PERSONAL) {
-            if (!targetFolder.getUser().getId().equals(user.getId())) {
-                throw new RuntimeException("You do not have permission to move to this personal folder.");
-            }
-        } else if (targetFolder.getFolderType() == FolderType.CLOUD) {
+           if (targetFolder.getFolderType() == FolderType.PERSONAL) {
+               if (!isRootFolder(targetFolder)) {
+                   if (!targetFolder.getUser().getId().equals(user.getId())) {
+                       throw new RuntimeException("You do not have permission to move to this personal folder.");
+                   }
+               }
+           }
+        else if (targetFolder.getFolderType() == FolderType.CLOUD) {
             if (!folderAccessService.canWrite(user, targetFolder)) {
                 throw new RuntimeException("You do not have write permission for this cloud folder.");
             }
@@ -151,7 +154,9 @@ public class FileService {
         file.setFilePath(moveRequestDTO.getFilePath());
         file.setFolder(targetFolder);
     }
-
+    private boolean isRootFolder(Folder folder) {
+        return folder.getId() == 1L;
+    }
     @Transactional
     public void renameFile(RenameRequestDTO renameRequestDTO) {
         File file = fileRepository.findById(renameRequestDTO.getFileId())
