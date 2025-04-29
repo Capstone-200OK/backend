@@ -281,4 +281,9 @@ public class SortingHistoryService {
         return new SortingHistorySelectedResponseDTO(fileResponses);
     }
 
+    public Long getLatestSortingHistoryId(Long userId) {
+        return sortingHistoryRepository.findTopByUserIdOrderBySortedAtDesc(userId)
+                .map(SortingHistory::getId)
+                .orElseThrow(() -> new RuntimeException("정리 기록이 없습니다."));
+    }
 }
