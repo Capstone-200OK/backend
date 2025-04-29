@@ -26,7 +26,8 @@ public class SortingHistory {
     @CreationTimestamp
     private Timestamp sortedAt;
 
+    @Builder.Default
     @Column(name = "is_maintain", nullable = false)
-    private Boolean isMaintain;
+    private Boolean isMaintain = Boolean.FALSE;
 }
 

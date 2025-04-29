@@ -56,7 +56,7 @@ public class OrganizeController {
         requestToPython.put("mode", sortType);
         requestToPython.put("output_path", outputPath);
         requestToPython.put("destinationFolderId", destinationFolderId); // ✅ 하나
-
+        requestToPython.put("userId", payload.get("userId"));
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
                 requestToPython,
@@ -75,7 +75,7 @@ public class OrganizeController {
     @PostMapping("/result")
     public ResponseEntity<?> handleOrganizedResult(@RequestBody OrganizedResultDTO result) {
         System.out.println("Received final result from Python: " + result);
-        Long userId = 1L; // 예시: 실제 사용자 ID는 인증 정보를 통해 가져오거나 Spring에서 전달받음
+        Long userId = result.getUserId(); // 예시: 실제 사용자 ID는 인증 정보를 통해 가져오거나 Spring에서 전달받음
 
         List<FileUpdateRequestDTO> fileUpdates = new ArrayList<>();
         List<FolderUpdateRequestDTO> folderUpdates = new ArrayList<>();
@@ -162,6 +162,7 @@ public class OrganizeController {
         SortingHistoryRequestDTO historyRequest = SortingHistoryRequestDTO.builder()
                 .userId(userId)
                 .fileUpdates(fileUpdates)
+                .isMaintain(false)
                 .folderUpdates(folderUpdates)
                 .build();
 

@@ -258,9 +258,10 @@ public class FolderService {
 
         return allFolders.stream()
                 .filter(folder -> {
+                    if (folder.getId() == 1L) return true; // ✅ Root 폴더는 모든 유저에게 허용
                     if (folder.getFolderType() == FolderType.PERSONAL) {
                         return folder.getUser() != null && folder.getUser().getId().equals(user.getId());
-                    } else { // CLOUD
+                    } else {
                         return folderAccessService.hasFullPermission(user, folder);
                     }
                 })
