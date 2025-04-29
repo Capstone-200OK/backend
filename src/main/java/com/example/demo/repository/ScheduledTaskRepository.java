@@ -10,6 +10,7 @@ import java.util.List;
 
 @Repository
 public interface ScheduledTaskRepository extends JpaRepository<ScheduledTask, Long> {
-    List<ScheduledTask> findByNextExecutedBeforeOrNextExecutedEquals(LocalDateTime before, LocalDateTime equals);
+    List<ScheduledTask> findByNextExecutedLessThanEqual(LocalDateTime now);
+
     List<ScheduledTask> findAllByUser(User user);
 }
