@@ -58,6 +58,7 @@ public class OrganizeController {
         requestToPython.put("output_path", outputPath);
         requestToPython.put("destinationFolderId", destinationFolderId); // ✅ 하나
         requestToPython.put("userId", payload.get("userId"));
+        requestToPython.put("isScheduled", payload.getOrDefault("isScheduled", false));
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
                 requestToPython,
@@ -152,13 +153,25 @@ public class OrganizeController {
             }
         }
 
+        Boolean isScheduled = result.getIsScheduled();
+        List<Long> originalIds = result.getOriginalStartFolderIds();
+        System.out.println("originalStartFolderIds: " + result.getOriginalStartFolderIds());
+        System.out.println("isScheduled: " + result.getIsScheduled());
+
         for (Long folderId : result.getSourceFolderIds()) {
             Folder originalFolder = folderService.getFolderById(folderId);
             boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
 
+            FolderStatus status;
+            if (Boolean.TRUE.equals(isScheduled) && originalIds != null && originalIds.contains(folderId)) {
+                status = FolderStatus.MAINTAIN; // ✅ 예약된 정리이고 원본 폴더일 경우 유지
+            } else {
+                status = shouldDelete ? FolderStatus.DELETED : FolderStatus.MAINTAIN;
+            }
+
             folderUpdates.add(FolderUpdateRequestDTO.builder()
                     .folderId(originalFolder.getId())
-                    .status(shouldDelete ? FolderStatus.DELETED : FolderStatus.MAINTAIN)
+                    .status(status)
                     .build());
         }
 

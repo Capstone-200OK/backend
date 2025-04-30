@@ -16,4 +16,6 @@ public class OrganizedResultDTO {
     private Long destinationFolderId;
     private List<Long> sourceFolderIds;
     private Long size;
+    private Boolean isScheduled;
+    private List<Long> originalStartFolderIds;
 }
