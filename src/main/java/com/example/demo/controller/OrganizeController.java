@@ -39,6 +39,7 @@ public class OrganizeController {
     private final FolderService folderService;
     private final FolderRepository folderRepository;
     private final SortingHistoryService sortingHistoryService;
+
     // 1) 사용자가 folderId를 선택 → /organize/start 로 POST
     @PostMapping("/start")
     public ResponseEntity<?> startOrganize(@RequestBody Map<String, Object> payload) {
@@ -75,102 +76,99 @@ public class OrganizeController {
     @PostMapping("/result")
     public ResponseEntity<?> handleOrganizedResult(@RequestBody OrganizedResultDTO result) {
         System.out.println("Received final result from Python: " + result);
-        Long userId = result.getUserId(); // 예시: 실제 사용자 ID는 인증 정보를 통해 가져오거나 Spring에서 전달받음
+        Long userId = result.getUserId();
 
         List<FileUpdateRequestDTO> fileUpdates = new ArrayList<>();
         List<FolderUpdateRequestDTO> folderUpdates = new ArrayList<>();
 
-        // 각 OperationDTO를 순회하며 파일의 폴더 업데이트(이동) 처리
+        Folder parentFolder = folderService.getFolderById(result.getDestinationFolderId());
+        String outputPath = folderService.buildFullPath(parentFolder); // ex: CloudRoot/CloudTestFolder
+
+        // ✅ 경로 캐시: "text_files/xls_files" → Folder
+        Map<String, Folder> folderCache = new HashMap<>();
+
         for (OperationDTO op : result.getOperations()) {
             try {
-                // 1. destination 경로에서 새 폴더 경로를 파싱 (예: "/organized/text_files/xls_files/test.xlsx" 에서 폴더 부분)
-                String destPath = op.getDestination();
-                Long folderId = result.getDestinationFolderId();
-                //Folder folder1 = folderService.getFolderById(folderId);
-                // 폴더 경로는 파일명 제외한 경로
-                String normalizedPath = destPath.replace("\\", "/");  // 경로 통일
-                int lastSlashIndex = normalizedPath.lastIndexOf("/");
-                if (lastSlashIndex == -1) {
-                    throw new IllegalArgumentException("Invalid path: " + destPath);
-                }
-                // 2. newFolderPath를 기반으로 폴더 정보를 생성하거나 검색
-                // 예를 들어, 폴더 경로의 마지막 폴더명을 이용하여 FolderRequestDTO를 구성
-                //FolderRequestDTO folderRequest = new FolderRequestDTO();
-                // newFolderPath를 경로 구분자로 분리해서 마지막 부분(새 폴더 이름) 선택.
-                String newFolderPath = normalizedPath.substring(0, lastSlashIndex);  // 마지막 / 전까지 폴더경로
-                String[] folderNames = newFolderPath.split("/");
-                Long parentId = null;  // Root 폴더 ID
+                String destPath = op.getDestination().replace("\\", "/");
+                int lastSlashIndex = destPath.lastIndexOf("/");
+                if (lastSlashIndex == -1) throw new IllegalArgumentException("Invalid path: " + destPath);
+
+                String newFolderPath = destPath.substring(0, lastSlashIndex);  // 폴더 경로까지만
+                String relativePath = newFolderPath.replaceFirst(outputPath, "");
+                if (relativePath.startsWith("/")) relativePath = relativePath.substring(1);
+
+                String[] folderNames = relativePath.isEmpty() ? new String[0] : relativePath.split("/");
+
                 Folder folder = null;
+                Folder currentParent = parentFolder;
+                StringBuilder fullPathKeyBuilder = new StringBuilder();
+
                 for (String name : folderNames) {
                     if (name == null || name.isBlank()) continue;
 
+                    fullPathKeyBuilder.append("/").append(name);
+                    String fullPathKey = fullPathKeyBuilder.toString();
+
+                    // ✅ 중복 폴더 방지
+                    if (folderCache.containsKey(fullPathKey)) {
+                        currentParent = folderCache.get(fullPathKey);
+                        continue;
+                    }
+
                     FolderRequestDTO folderRequest = new FolderRequestDTO();
                     folderRequest.setName(name);
-                    folderRequest.setUserId(userId);
-                    folderRequest.setParentFolderId(parentId);
+                    folderRequest.setUserId(userId); // 권한 확인용
+                    folderRequest.setParentFolderId(currentParent.getId());
+                    folderRequest.setFolderType(parentFolder.getFolderType()); // ✅ 목적지 폴더 기준
 
                     FolderResult folderResult = folderService.findOrCreateFolderWithFlag(folderRequest);
                     folder = folderResult.getFolder();
-                    parentId = folder.getId(); // 다음 폴더의 parent로 연결
+                    currentParent = folder;
+                    folderCache.put(fullPathKey, folder); // ✅ 캐시 저장
+
                     if (folderResult.isNewlyCreated()) {
-                        FolderUpdateRequestDTO folderUpdate = FolderUpdateRequestDTO.builder()
+                        folderUpdates.add(FolderUpdateRequestDTO.builder()
                                 .folderId(folder.getId())
                                 .status(FolderStatus.CREATED)
-                                .build();
-                        folderUpdates.add(folderUpdate);
+                                .build());
                     }
                 }
-                // 만약 상위 폴더 정보도 있다면 추가 (예: parentFolderId)
-                // folderRequest.setParentFolderId(...);
 
                 if (folder == null) {
-                    throw new IllegalStateException("Folder creation failed for path: " + newFolderPath);
+                    folder = parentFolder;  // 하위 폴더가 없는 경우, 목적지 자체로 설정
                 }
 
-                // 3. MoveRequestDTO를 생성하여 파일의 folderId, filePath 업데이트
-            /*  */
-
-                System.out.println("Updated fileId " + op.getFileId() + " to folderId " + folder.getId());
                 File originalFile = fileService.getFileById(op.getFileId());
-                FileUpdateRequestDTO fileUpdate = FileUpdateRequestDTO.builder()
+                fileUpdates.add(FileUpdateRequestDTO.builder()
                         .fileId(op.getFileId())
                         .previousFolderId(originalFile.getFolder().getId())
                         .previousFilePath(originalFile.getFilePath())
-                        .build();
-                fileUpdates.add(fileUpdate);
-                System.out.println("fileUpdate: " + fileUpdate);
-                MoveRequestDTO moveRequest = new MoveRequestDTO(op.getFileId(), folder.getId(), destPath);
-                System.out.println(moveRequest);
-                fileService.moveFile(moveRequest);
+                        .build());
+
+                fileService.moveFile(new MoveRequestDTO(op.getFileId(), folder.getId(), destPath));
+
             } catch (Exception e) {
                 System.err.println("Error updating file with fileId " + op.getFileId() + ": " + e.getMessage());
             }
         }
+
         for (Long folderId : result.getSourceFolderIds()) {
             Folder originalFolder = folderService.getFolderById(folderId);
             boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
 
-            FolderUpdateRequestDTO folderUpdate = FolderUpdateRequestDTO.builder()
+            folderUpdates.add(FolderUpdateRequestDTO.builder()
                     .folderId(originalFolder.getId())
                     .status(shouldDelete ? FolderStatus.DELETED : FolderStatus.MAINTAIN)
-                    .build();
-
-            folderUpdates.add(folderUpdate);
+                    .build());
         }
 
-        // 추가: 기존 파일 삭제 / 기존 파일 삭제 안해 여부도 전달하기
-        SortingHistoryRequestDTO historyRequest = SortingHistoryRequestDTO.builder()
+        sortingHistoryService.saveSortingHistory(SortingHistoryRequestDTO.builder()
                 .userId(userId)
                 .fileUpdates(fileUpdates)
                 .isMaintain(false)
                 .folderUpdates(folderUpdates)
-                .build();
+                .build());
 
-        sortingHistoryService.saveSortingHistory(historyRequest);
-        // 추가: 만약 원래 사용되던 폴더(예: 자동분류 대상 폴더)는 삭제 처리해야 한다면, folderService.markFolderAsDeleted() 호출 등 추가 작업
-        // folderService.markFolderAsDeleted(result.getFolderId());
-
-        // 최종적으로 DB 업데이트가 완료되었음을 반환
         Map<String, Object> responseMap = new HashMap<>();
         responseMap.put("message", "Result processed by Spring");
         return ResponseEntity.ok(responseMap);
