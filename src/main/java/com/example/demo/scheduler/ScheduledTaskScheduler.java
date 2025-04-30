@@ -29,11 +29,12 @@ public class ScheduledTaskScheduler {
 
     private static final String BASE_URL = "http://localhost:8080";
 
-    @Scheduled(cron = "0 0 * * * *") //
+    @Scheduled(cron = "0 * * * * *") //
     @Transactional
     public void executeScheduledTasks() {
         LocalDateTime now = LocalDateTime.now();
         List<ScheduledTask> dueTasks = taskRepository.findByNextExecutedLessThanEqual(now);
+        Boolean isScheduled = true;
 
         for (ScheduledTask task : dueTasks) {
             try {
@@ -47,7 +48,8 @@ public class ScheduledTaskScheduler {
                         "mode", task.getCriteria().name().toLowerCase(),
                         "destinationFolderId", destinationFolder.getId(),
                         "userId", task.getUser().getId(),
-                        "output_path", outputPath
+                        "output_path", outputPath,
+                        "isScheduled", isScheduled
                 );
 
                 HttpHeaders headers = new HttpHeaders();
