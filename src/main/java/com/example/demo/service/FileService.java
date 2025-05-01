@@ -218,4 +218,30 @@ public class FileService {
         return fileRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("File not found"));
     }
+
+    @Transactional
+    public File duplicateFile(File originalFile, Folder destinationFolder, String newFilePath) {
+        // 파일명 중복 처리
+        String originalName = originalFile.getName();
+        Long userId = originalFile.getUser().getId();
+        Long folderId = destinationFolder.getId();
+        FolderType folderType = destinationFolder.getFolderType();
+
+        String finalName = resolveDuplicateName(folderId, userId, originalName, folderType);
+
+        File duplicated = File.builder()
+                .user(originalFile.getUser())
+                .folder(destinationFolder)
+                .name(finalName)
+                .fileType(originalFile.getFileType())
+                .filePath(newFilePath)
+                .size(originalFile.getSize())
+                .fileUrl(originalFile.getFileUrl())
+                .fileThumbUrl(originalFile.getFileThumbUrl())
+                .isDeleted(false)
+                .isImportant(originalFile.getIsImportant())
+                .build();
+
+        return fileRepository.save(duplicated);
+    }
 }

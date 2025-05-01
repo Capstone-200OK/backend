@@ -2,7 +2,12 @@ package com.example.demo.repository;
 
 import com.example.demo.entity.File;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,4 +21,8 @@ public interface FileRepository extends JpaRepository<File, Long> {
     long countByFolderIdAndIsDeletedFalse(Long folderId);
     boolean existsByFolderIdAndIsDeletedFalse(Long folderId);
     boolean existsByFolderIdAndUserIdAndNameAndIsDeletedFalse(Long folderId, Long userId, String newName);
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM File f WHERE f.id = :id")
+    void deleteByFileId(@Param("id") @NonNull Long id);
 }

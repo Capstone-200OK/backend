@@ -59,6 +59,7 @@ public class OrganizeController {
         requestToPython.put("destinationFolderId", destinationFolderId); // ✅ 하나
         requestToPython.put("userId", payload.get("userId"));
         requestToPython.put("isScheduled", payload.getOrDefault("isScheduled", false));
+        requestToPython.put("isMaintain", payload.getOrDefault("isMaintain", false));
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
                 requestToPython,
@@ -81,6 +82,7 @@ public class OrganizeController {
 
         List<FileUpdateRequestDTO> fileUpdates = new ArrayList<>();
         List<FolderUpdateRequestDTO> folderUpdates = new ArrayList<>();
+        Boolean isMaintain = result.getIsMaintain();
 
         Folder parentFolder = folderService.getFolderById(result.getDestinationFolderId());
         String outputPath = folderService.buildFullPath(parentFolder); // ex: CloudRoot/CloudTestFolder
@@ -140,13 +142,24 @@ public class OrganizeController {
                 }
 
                 File originalFile = fileService.getFileById(op.getFileId());
-                fileUpdates.add(FileUpdateRequestDTO.builder()
-                        .fileId(op.getFileId())
-                        .previousFolderId(originalFile.getFolder().getId())
-                        .previousFilePath(originalFile.getFilePath())
-                        .build());
 
-                fileService.moveFile(new MoveRequestDTO(op.getFileId(), folder.getId(), destPath));
+                // ✅ 복제 조건: isMaintain == true → 기존 파일 유지 + 복사본 이동
+                if (Boolean.TRUE.equals(isMaintain)) {
+                    File duplicated = fileService.duplicateFile(originalFile, folder, destPath);
+                    fileUpdates.add(FileUpdateRequestDTO.builder()
+                            .fileId(duplicated.getId())
+                            .previousFolderId(originalFile.getFolder().getId())
+                            .previousFilePath(originalFile.getFilePath())
+                            .build());
+                } else {
+                    fileUpdates.add(FileUpdateRequestDTO.builder()
+                            .fileId(op.getFileId())
+                            .previousFolderId(originalFile.getFolder().getId())
+                            .previousFilePath(originalFile.getFilePath())
+                            .build());
+
+                    fileService.moveFile(new MoveRequestDTO(op.getFileId(), folder.getId(), destPath));
+                }
 
             } catch (Exception e) {
                 System.err.println("Error updating file with fileId " + op.getFileId() + ": " + e.getMessage());
@@ -161,6 +174,11 @@ public class OrganizeController {
         for (Long folderId : result.getSourceFolderIds()) {
             Folder originalFolder = folderService.getFolderById(folderId);
             boolean shouldDelete = fileService.countByFolderId(originalFolder.getId()) == 0;
+
+            if (Boolean.TRUE.equals(isMaintain)) {
+                // ✅ MAINTAIN/DELETE 폴더 제외, CREATED만 처리
+                continue;
+            }
 
             FolderStatus status;
             if (Boolean.TRUE.equals(isScheduled) && originalIds != null && originalIds.contains(folderId)) {
@@ -178,7 +196,7 @@ public class OrganizeController {
         sortingHistoryService.saveSortingHistory(SortingHistoryRequestDTO.builder()
                 .userId(userId)
                 .fileUpdates(fileUpdates)
-                .isMaintain(false)
+                .isMaintain(isMaintain)
                 .folderUpdates(folderUpdates)
                 .build());
 
