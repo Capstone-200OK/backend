@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
-import com.example.demo.dto.trashBinDTO.TrashBinResponseDTO;
+import com.example.demo.dto.trashBinDTO.*;
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.service.TrashBinService;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +38,15 @@ public class TrashBinController {
     }
 
     // 휴지통 목록 확인
-    @GetMapping("/list/{userId}")
-    public List<TrashBinResponseDTO> getTrashFiles(@PathVariable Long userId) {
-        return trashBinService.getTrashFilesByUser(userId);
+
+    @GetMapping("/files/{userId}")
+    public List<TrashBinFileResponseDTO> getDeletedFiles(@PathVariable Long userId) {
+        return trashBinService.getDeletedFiles(userId);
+    }
+
+    @GetMapping("/folders/{userId}")
+    public List<TrashBinFolderResponseDTO> getDeletedFolders(@PathVariable Long userId) {
+        return trashBinService.getDeletedFolders(userId);
     }
 
     // 자동 삭제 테스트용
