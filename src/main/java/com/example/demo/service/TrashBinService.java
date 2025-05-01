@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
-import com.example.demo.dto.trashBinDTO.TrashBinResponseDTO;
+import com.example.demo.dto.trashBinDTO.*;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.TrashBin;
@@ -246,17 +245,30 @@ public class TrashBinService {
     }
 
     @Transactional
-    public List<TrashBinResponseDTO> getTrashFilesByUser(Long userId) {
+    public List<TrashBinFileResponseDTO> getDeletedFiles(Long userId) {
         return trashBinRepository.findAll().stream()
                 .filter(trash -> trash.getUser().getId().equals(userId))
-                .map(trash -> TrashBinResponseDTO.builder()
+                .filter(trash -> trash.getFile() != null)
+                .map(trash -> TrashBinFileResponseDTO.builder()
                         .trashId(trash.getId())
-                        .fileId(trash.getFile() != null ? trash.getFile().getId() : null)
-                        .fileName(trash.getFile() != null ? trash.getFile().getName() : null)
-                        .fileType(trash.getFile() != null ? trash.getFile().getFileType() : null)
-                        .size(trash.getFile() != null ? trash.getFile().getSize() : null)
-                        .folderId(trash.getFolder() != null ? trash.getFolder().getId() : null)
-                        .folderName(trash.getFolder() != null ? trash.getFolder().getName() : null)
+                        .fileId(trash.getFile().getId())
+                        .fileName(trash.getFile().getName())
+                        .fileType(trash.getFile().getFileType())
+                        .size(trash.getFile().getSize())
+                        .deletedAt(trash.getDeletedAt())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<TrashBinFolderResponseDTO> getDeletedFolders(Long userId) {
+        return trashBinRepository.findAll().stream()
+                .filter(trash -> trash.getUser().getId().equals(userId))
+                .filter(trash -> trash.getFolder() != null)
+                .map(trash -> TrashBinFolderResponseDTO.builder()
+                        .trashId(trash.getId())
+                        .folderId(trash.getFolder().getId())
+                        .folderName(trash.getFolder().getName())
                         .deletedAt(trash.getDeletedAt())
                         .build())
                 .collect(Collectors.toList());
