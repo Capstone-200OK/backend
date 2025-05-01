@@ -6,6 +6,7 @@ import com.example.demo.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.example.demo.repository.ImportantBinRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,6 +25,7 @@ public class SortingHistoryService {
     private final FileRepository fileRepository;
     private final FolderRepository folderRepository;
     private final FolderAccessRepository folderAccessRepository;
+    private final ImportantBinRepository importantBinRepository;
 
     @Transactional
     public void saveSortingHistory(SortingHistoryRequestDTO request) {
@@ -89,9 +91,11 @@ public class SortingHistoryService {
 
         if (sortingHistory.getIsMaintain()) {
             // 유지하는 경우 (isMaintain = true)
+            System.out.println("isMaintain=true");
             rollbackWhenMaintain(sortingId);
         } else {
             // 유지하지 않는 경우 (isMaintain = false)
+            System.out.println("isMaintain=false");
             rollbackWhenNotMaintain(sortingId);
         }
     }
@@ -181,6 +185,8 @@ public class SortingHistoryService {
         for (Long id : folderIdsToDelete) {
             // ✅ (1) folder_access 먼저 삭제
             folderAccessRepository.deleteAllByFolderId(id);
+            // (2) important_bin 먼저 삭제
+            importantBinRepository.deleteAllByFolderId(id);
 
             boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
             boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
@@ -197,11 +203,28 @@ public class SortingHistoryService {
 
     @Transactional
     public void rollbackWhenMaintain(Long sortingId) {
-        // 1. 파일 삭제
-        fileSortingHistoryRepository.findBySortingId(sortingId).forEach(record -> fileRepository.delete(record.getFile()));
+        // 1. 먼저 삭제할 복제 파일들 리스트로 확보 (history 삭제 전에)
+        List<File> filesToDelete = fileSortingHistoryRepository.findBySortingId(sortingId)
+                .stream()
+                .map(FileSortingHistory::getFile)
+                .toList();
 
-        // 2. 생성됐던 폴더 삭제
-        // 1. 먼저 CREATED 상태의 folder들을 리스트로 저장
+        // 2. file_sorting_history 삭제
+        fileSortingHistoryRepository.deleteAllBySortingId(sortingId);
+        fileSortingHistoryRepository.flush();
+
+        // 3. 복제된 파일 실제 삭제
+        for (File file : filesToDelete) {
+            // 중요문서함에서 먼저 삭제
+            Long id = file.getId();
+            importantBinRepository.deleteAllByFileId(id);
+            importantBinRepository.flush();
+
+            fileRepository.deleteByFileId(id);
+            fileRepository.flush();
+        }
+
+        // 4. 먼저 CREATED 상태의 folder들을 리스트로 저장
         List<Folder> foldersToDelete = folderSortingHistoryRepository
                 .findBySortingIdAndStatus(sortingId, FolderStatus.CREATED)
                 .stream()
@@ -209,33 +232,35 @@ public class SortingHistoryService {
                 .sorted((f1, f2) -> Integer.compare(getFolderDepth(f2), getFolderDepth(f1))) // 깊이 내림차순 정렬
                 .toList();
 
-        // 2. file_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
-        fileSortingHistoryRepository.deleteAllBySortingId(sortingId);
-        fileSortingHistoryRepository.flush();
-
-        // 2. folder_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
+        // 5. folder_sorting_history 전체 삭제 (이제 folder는 참조 안 됨)
         folderSortingHistoryRepository.deleteAllBySortingId(sortingId);
         folderSortingHistoryRepository.flush();
 
-        // 3. folders 직접 삭제 (ID 기반)
+        // 6. folders 직접 삭제 (ID 기반)
         List<Long> folderIdsToDelete = foldersToDelete.stream()
                 .map(Folder::getId)
                 .toList();
         for (Long id : folderIdsToDelete) {
             // ✅ (1) folder_access 먼저 삭제
             folderAccessRepository.deleteAllByFolderId(id);
+            // (2) important_bin 먼저 삭제
+            importantBinRepository.deleteAllByFolderId(id);
 
             boolean hasFiles = fileRepository.existsByFolderIdAndIsDeletedFalse(id);
             boolean hasSubFolders = folderRepository.existsByParentFolderIdAndIsDeletedFalse(id);
 
             if (!hasFiles && !hasSubFolders) {
                 folderRepository.deleteByFolderId(id);
+                folderRepository.flush();
             }
         }
 
-        // 4. sorting_history에서 기록 삭제
+        // 7. sorting_history에서 기록 삭제
         sortingHistoryRepository.deleteBySortingId(sortingId);
         sortingHistoryRepository.flush();
+
+        System.out.println("📁 삭제 대상 파일: " + filesToDelete.size());
+        System.out.println("📁 삭제 대상 폴더: " + folderIdsToDelete);
     }
 
     private int getFolderDepth(Folder folder) {
