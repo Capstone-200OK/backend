@@ -6,5 +6,10 @@ import lombok.Data;
 public class RenameRequestDTO {
     private Long fileId;
     private String newName;
-    private String newFilePath;
+
+    public RenameRequestDTO(Long fileId, String newName) {
+        this.fileId = fileId;
+        this.newName = newName;
+    }
+//    private String newFilePath;
 }
