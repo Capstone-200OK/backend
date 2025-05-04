@@ -1,10 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.fileDTO.FilePythonRequestDTO;
-import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
-import com.example.demo.dto.folderDTO.FolderRequestDTO;
-import com.example.demo.dto.folderDTO.FolderResult;
-import com.example.demo.dto.folderDTO.FolderSelectableDTO;
+import com.example.demo.dto.folderDTO.*;
 import com.example.demo.entity.*;
 import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
@@ -13,6 +10,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -296,5 +295,27 @@ public class FolderService {
             pathBuilder.append("/");  // 구분자 추가
         }
         pathBuilder.append(folder.getName());
+    }
+
+    public List<FolderPathResponseDTO> getFolderPath(Long folderId) {
+        Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
+                .orElseThrow(() -> new RuntimeException("Folder not found"));
+
+        List<FolderPathResponseDTO> path = new ArrayList<>();
+
+        // 현재 폴더부터 상위 폴더까지 역순으로 수집
+        while (folder != null) {
+            path.add(FolderPathResponseDTO.builder()
+                    .folderId(folder.getId())
+                    .folderName(folder.getName())
+                    .build());
+
+            folder = folder.getParentFolder();
+        }
+
+        // Root → ... → 대상 순서로 정렬
+        Collections.reverse(path);
+
+        return path;
     }
 }
