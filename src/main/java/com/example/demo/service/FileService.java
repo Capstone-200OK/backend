@@ -162,7 +162,7 @@ public class FileService {
         File file = fileRepository.findById(renameRequestDTO.getFileId())
                 .orElseThrow(() -> new IllegalArgumentException("File not found"));
         file.setName(renameRequestDTO.getNewName());
-        file.setFilePath(renameRequestDTO.getNewFilePath());
+//        file.setFilePath(renameRequestDTO.getNewFilePath());
     }
 
     @Transactional(readOnly = true)

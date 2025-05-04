@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.OperationDTO;
 import com.example.demo.dto.OrganizedResultDTO;
+import com.example.demo.dto.fileDTO.RenameRequestDTO;
 import com.example.demo.dto.sortingHistoryDTO.FileUpdateRequestDTO;
 import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
@@ -151,6 +152,11 @@ public class OrganizeController {
                             .previousFolderId(originalFile.getFolder().getId())
                             .previousFilePath(originalFile.getFilePath())
                             .build());
+                    String newName = op.getName();
+                    System.out.println("newName: " + newName);
+                    if (newName != null && !newName.isBlank()) {
+                        fileService.renameFile(new RenameRequestDTO(op.getFileId(), newName));
+                    }
                 } else {
                     fileUpdates.add(FileUpdateRequestDTO.builder()
                             .fileId(op.getFileId())
@@ -159,6 +165,11 @@ public class OrganizeController {
                             .build());
 
                     fileService.moveFile(new MoveRequestDTO(op.getFileId(), folder.getId(), destPath));
+                    String newName = op.getName();
+                    System.out.println("newName: " + newName);
+                    if (newName != null && !newName.isBlank()) {
+                        fileService.renameFile(new RenameRequestDTO(op.getFileId(), newName));
+                    }
                 }
 
             } catch (Exception e) {
