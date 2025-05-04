@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.folderDTO.FolderPathResponseDTO;
 import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
 import com.example.demo.dto.folderDTO.FolderRequestDTO;
 import com.example.demo.dto.folderDTO.FolderSelectableDTO;
@@ -75,5 +76,11 @@ public class FolderController {
                     folder.getUser().getId()
             );
         }
+    }
+
+    @GetMapping("/path/{folderId}")
+    public ResponseEntity<List<FolderPathResponseDTO>> getFolderPathAPI(@PathVariable Long folderId) {
+        List<FolderPathResponseDTO> path = folderService.getFolderPath(folderId);
+        return ResponseEntity.ok(path);
     }
 }
