@@ -11,4 +11,6 @@ public class ImportantBinFileResponseDTO {
     private String fileName;
     private String fileType;
     private Long size;
+    private String fileUrl;
+    private String fileThumbnailUrl;
 }

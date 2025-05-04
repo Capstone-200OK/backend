@@ -78,7 +78,7 @@ public class OrganizeController {
     //    Python이 /organize/result 로 POST
     @PostMapping("/result")
     public ResponseEntity<?> handleOrganizedResult(@RequestBody OrganizedResultDTO result) {
-        System.out.println("Received final result from Python: " + result);
+        System.out.println("📦 Received result from Python: " + result);
         Long userId = result.getUserId();
 
         List<FileUpdateRequestDTO> fileUpdates = new ArrayList<>();
@@ -87,6 +87,7 @@ public class OrganizeController {
 
         Folder parentFolder = folderService.getFolderById(result.getDestinationFolderId());
         String outputPath = folderService.buildFullPath(parentFolder); // ex: CloudRoot/CloudTestFolder
+        System.out.println("📁 [Parent Folder] ID: " + parentFolder.getId() + " → FullPath: " + outputPath);
 
         // ✅ 경로 캐시: "text_files/xls_files" → Folder
         Map<String, Folder> folderCache = new HashMap<>();
@@ -100,6 +101,10 @@ public class OrganizeController {
                 String newFolderPath = destPath.substring(0, lastSlashIndex);  // 폴더 경로까지만
                 String relativePath = newFolderPath.replaceFirst(outputPath, "");
                 if (relativePath.startsWith("/")) relativePath = relativePath.substring(1);
+
+                System.out.println("\n🚚 Processing file: " + op.getName());
+                System.out.println("🔗 Destination Path: " + destPath);
+                System.out.println("🪜 Relative Path: " + relativePath);
 
                 String[] folderNames = relativePath.isEmpty() ? new String[0] : relativePath.split("/");
 
@@ -116,8 +121,12 @@ public class OrganizeController {
                     // ✅ 중복 폴더 방지
                     if (folderCache.containsKey(fullPathKey)) {
                         currentParent = folderCache.get(fullPathKey);
+                        folder = currentParent;
+                        System.out.println("📦 [CACHE HIT] " + fullPathKey + " → ID: " + currentParent.getId());
                         continue;
                     }
+
+                    System.out.println("📂 [CREATE or FIND] Folder: " + name + ", Parent ID: " + currentParent.getId());
 
                     FolderRequestDTO folderRequest = new FolderRequestDTO();
                     folderRequest.setName(name);
@@ -130,6 +139,8 @@ public class OrganizeController {
                     currentParent = folder;
                     folderCache.put(fullPathKey, folder); // ✅ 캐시 저장
 
+                    System.out.println("✅ Folder Result: " + folder.getName() + " → ID: " + folder.getId() + ", Newly Created: " + folderResult.isNewlyCreated());
+
                     if (folderResult.isNewlyCreated()) {
                         folderUpdates.add(FolderUpdateRequestDTO.builder()
                                 .folderId(folder.getId())
@@ -140,9 +151,11 @@ public class OrganizeController {
 
                 if (folder == null) {
                     folder = parentFolder;  // 하위 폴더가 없는 경우, 목적지 자체로 설정
+                    System.out.println("📄 No subfolder path. Using parent folder: " + folder.getName() + " (ID: " + folder.getId() + ")");
                 }
 
                 File originalFile = fileService.getFileById(op.getFileId());
+                String newName = op.getName();
 
                 // ✅ 복제 조건: isMaintain == true → 기존 파일 유지 + 복사본 이동
                 if (Boolean.TRUE.equals(isMaintain)) {
@@ -152,7 +165,7 @@ public class OrganizeController {
                             .previousFolderId(originalFile.getFolder().getId())
                             .previousFilePath(originalFile.getFilePath())
                             .build());
-                    String newName = op.getName();
+                    System.out.println("📎 Duplicated file → New ID: " + duplicated.getId());
                     System.out.println("newName: " + newName);
                     if (newName != null && !newName.isBlank()) {
                         fileService.renameFile(new RenameRequestDTO(op.getFileId(), newName));
@@ -165,8 +178,7 @@ public class OrganizeController {
                             .build());
 
                     fileService.moveFile(new MoveRequestDTO(op.getFileId(), folder.getId(), destPath));
-                    String newName = op.getName();
-                    System.out.println("newName: " + newName);
+                    System.out.println("🚚 MoveFile → FileID: " + op.getFileId() + ", Target Folder ID: " + folder.getId() + ", destPath: " + destPath);
                     if (newName != null && !newName.isBlank()) {
                         fileService.renameFile(new RenameRequestDTO(op.getFileId(), newName));
                     }
