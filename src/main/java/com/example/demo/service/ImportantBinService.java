@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.importantBinDTO.ImportantBinRequestDTO;
-import com.example.demo.dto.importantBinDTO.ImportantBinResponseDTO;
+import com.example.demo.dto.importantBinDTO.*;
 import com.example.demo.entity.File;
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.ImportantBin;
@@ -31,28 +30,43 @@ public class ImportantBinService {
         User user = userRepository.findById(requestDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-        File file = null;
-        Folder folder = null;
-
         if (requestDTO.getFileId() != null) {
-            file = fileRepository.findById(requestDTO.getFileId())
+            File file = fileRepository.findById(requestDTO.getFileId())
                     .orElseThrow(() -> new IllegalArgumentException("파일을 찾을 수 없습니다."));
+
+            // ✅ 중복 체크
+            if (importantBinRepository.existsByUserAndFile(user, file)) {
+                throw new IllegalStateException("이미 중요 문서함에 추가된 파일입니다.");
+            }
+
             file.setIsImportant(true);
+
+            ImportantBin importantBin = ImportantBin.builder()
+                    .user(user)
+                    .file(file)
+                    .build();
+
+            importantBinRepository.save(importantBin);
+
         } else if (requestDTO.getFolderId() != null) {
-            folder = folderRepository.findById(requestDTO.getFolderId())
+            Folder folder = folderRepository.findById(requestDTO.getFolderId())
                     .orElseThrow(() -> new IllegalArgumentException("폴더를 찾을 수 없습니다."));
+
+            if (importantBinRepository.existsByUserAndFolder(user, folder)) {
+                throw new IllegalStateException("이미 중요 문서함에 추가된 폴더입니다.");
+            }
+
             folder.setIsImportant(true);
+
+            ImportantBin importantBin = ImportantBin.builder()
+                    .user(user)
+                    .folder(folder)
+                    .build();
+
+            importantBinRepository.save(importantBin);
         } else {
             throw new IllegalArgumentException("파일 또는 폴더 ID 중 하나는 필요합니다.");
         }
-
-        ImportantBin importantBin = ImportantBin.builder()
-                .user(user)
-                .file(file)
-                .folder(folder)
-                .build();
-
-        importantBinRepository.save(importantBin);
     }
 
     @Transactional
@@ -72,21 +86,30 @@ public class ImportantBinService {
         importantBinRepository.delete(importantBin);
     }
 
-    @Transactional(readOnly = true)
-    public List<ImportantBinResponseDTO> getImportantListByUser(Long userId) {
-        // 사용자 조회
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+    @jakarta.transaction.Transactional
+    public List<ImportantBinFileResponseDTO> getImportantFiles(Long userId) {
+        return importantBinRepository.findAll().stream()
+                .filter(important -> important.getUser().getId().equals(userId))
+                .filter(important -> important.getFile() != null)
+                .map(important -> ImportantBinFileResponseDTO.builder()
+                        .importantId(important.getId())
+                        .fileId(important.getFile().getId())
+                        .fileName(important.getFile().getName())
+                        .fileType(important.getFile().getFileType())
+                        .size(important.getFile().getSize())
+                        .build())
+                .collect(Collectors.toList());
+    }
 
-        // 해당 사용자의 중요 문서함 목록 조회
-        List<ImportantBin> importantList = importantBinRepository.findAllByUser(user);
-
-        // 엔티티 -> DTO 변환
-        return importantList.stream()
-                .map(importantBin -> ImportantBinResponseDTO.builder()
-                        .importantId(importantBin.getId())
-                        .fileId(importantBin.getFile() != null ? importantBin.getFile().getId() : null)
-                        .folderId(importantBin.getFolder() != null ? importantBin.getFolder().getId() : null)
+    @jakarta.transaction.Transactional
+    public List<ImportantBinFolderResponseDTO> getImportantFolders(Long userId) {
+        return importantBinRepository.findAll().stream()
+                .filter(important -> important.getUser().getId().equals(userId))
+                .filter(important -> important.getFolder() != null)
+                .map(important -> ImportantBinFolderResponseDTO.builder()
+                        .importantId(important.getId())
+                        .folderId(important.getFolder().getId())
+                        .folderName(important.getFolder().getName())
                         .build())
                 .collect(Collectors.toList());
     }

@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.MessageResponse;
 import com.example.demo.dto.importantBinDTO.*;
+import com.example.demo.dto.trashBinDTO.TrashBinFileResponseDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinFolderResponseDTO;
 import com.example.demo.service.ImportantBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -28,8 +30,13 @@ public class ImportantBinController {
         return ResponseEntity.ok(new MessageResponse("중요 문서함에서 제거되었습니다."));
     }
 
-    @GetMapping("/list/{userId}")
-    public List<ImportantBinResponseDTO> getTrashFiles(@PathVariable Long userId) {
-        return importantBinService.getImportantListByUser(userId);
+    @GetMapping("/files/{userId}")
+    public List<ImportantBinFileResponseDTO> getDeletedFiles(@PathVariable Long userId) {
+        return importantBinService.getImportantFiles(userId);
+    }
+
+    @GetMapping("/folders/{userId}")
+    public List<ImportantBinFolderResponseDTO> getDeletedFolders(@PathVariable Long userId) {
+        return importantBinService.getImportantFolders(userId);
     }
 }
