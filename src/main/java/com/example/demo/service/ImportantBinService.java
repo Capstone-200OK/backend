@@ -97,6 +97,8 @@ public class ImportantBinService {
                         .fileName(important.getFile().getName())
                         .fileType(important.getFile().getFileType())
                         .size(important.getFile().getSize())
+                        .fileUrl(important.getFile().getFileUrl())
+                        .fileThumbnailUrl(important.getFile().getFileThumbUrl())
                         .build())
                 .collect(Collectors.toList());
     }
