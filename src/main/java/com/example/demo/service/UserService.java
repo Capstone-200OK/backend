@@ -26,7 +26,7 @@ public class UserService {
         if (!loginDTO.getPassword().equals(user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-        return new UserResponseDTO(user.getId());
+        return new UserResponseDTO(user.getId(), user.getNickName());
     }
     public void signup(UserDTO userDTO) {
         // 중복 이메일 검사
