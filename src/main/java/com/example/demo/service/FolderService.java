@@ -318,4 +318,22 @@ public class FolderService {
 
         return path;
     }
+
+    public List<FolderSearchResponseDTO> searchFolder(Long userId, String input) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<FolderSearchResponseDTO> folders = new ArrayList<>();
+
+        List<Folder> folderList = folderRepository.findAllByNameContainingIgnoreCaseAndUser(input, user);
+        for (Folder folder : folderList) {
+            folders.add(FolderSearchResponseDTO.builder()
+                    .folderId(folder.getId())
+                    .folderName(folder.getName())
+                    .parentFolderName(folder.getParentFolder().getName())
+                    .build());
+        }
+
+        return folders;
+    }
 }

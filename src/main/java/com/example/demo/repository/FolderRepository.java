@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface FolderRepository extends JpaRepository<Folder, Long> {
     // 1) 부모 폴더까지 포함하여 찾기 (부모가 null일 수도 있으므로 주의)
     Optional<Folder> findByNameAndParentFolderAndUser(String name, Folder parentFolder, User user);
-
+    List<Folder> findAllByNameContainingIgnoreCaseAndUser(String name, User user);
     // 2) 부모가 null인 폴더를 찾기 위한 별도 메서드 (루트 폴더용)
     Optional<Folder> findByNameAndParentFolderIsNullAndUser(String name, User user);
     List<Folder> findByParentFolderId(Long parentFolderId);
