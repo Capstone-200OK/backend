@@ -1,9 +1,7 @@
 package com.example.demo.service;
 
-import com.example.demo.dto.fileDTO.DeleteRequestDTO;
-import com.example.demo.dto.fileDTO.FileRequestDTO;
-import com.example.demo.dto.fileDTO.MoveRequestDTO;
-import com.example.demo.dto.fileDTO.RenameRequestDTO;
+import com.example.demo.dto.fileDTO.*;
+import com.example.demo.dto.folderDTO.FolderPathResponseDTO;
 import com.example.demo.entity.*;
 import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
@@ -17,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -243,5 +242,24 @@ public class FileService {
                 .build();
 
         return fileRepository.save(duplicated);
+    }
+
+    public List<FileSearchResponseDTO> searchFolder(Long userId, String input) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<FileSearchResponseDTO> files = new ArrayList<>();
+
+        List<File> fileList = fileRepository.findAllByNameContainingIgnoreCaseAndUser(input, user);
+        for (File file : fileList) {
+            files.add(FileSearchResponseDTO.builder()
+                    .fileId(file.getId())
+                    .fileName(file.getName())
+                    .parentFolderId(file.getFolder().getId())
+                    .parentFolderName(file.getFolder().getName())
+                    .build());
+        }
+
+        return files;
     }
 }

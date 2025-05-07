@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.fileDTO.FileRequestDTO;
+import com.example.demo.dto.fileDTO.FileSearchResponseDTO;
 import com.example.demo.dto.fileDTO.MoveRequestDTO;
 import com.example.demo.dto.fileDTO.RenameRequestDTO;
+import com.example.demo.dto.folderDTO.FolderPathResponseDTO;
 import com.example.demo.entity.File;
 import com.example.demo.service.FileService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -68,5 +70,11 @@ public class FileController {
                     file.getIsImportant()
             );
         }
+    }
+
+    @GetMapping("/search/{userId}/{input}")
+    public ResponseEntity<List<FileSearchResponseDTO>> searchFolder(@PathVariable Long userId, @PathVariable String input) {
+        List<FileSearchResponseDTO> folders = fileService.searchFolder(userId, input);
+        return ResponseEntity.ok(folders);
     }
 }

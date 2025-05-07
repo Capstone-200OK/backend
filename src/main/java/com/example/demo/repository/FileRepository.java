@@ -1,6 +1,8 @@
 package com.example.demo.repository;
 
 import com.example.demo.entity.File;
+import com.example.demo.entity.Folder;
+import com.example.demo.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -25,4 +27,5 @@ public interface FileRepository extends JpaRepository<File, Long> {
     @Modifying
     @Query("DELETE FROM File f WHERE f.id = :id")
     void deleteByFileId(@Param("id") @NonNull Long id);
+    List<File> findAllByNameContainingIgnoreCaseAndUser(String name, User user);
 }

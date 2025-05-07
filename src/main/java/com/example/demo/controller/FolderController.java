@@ -1,9 +1,6 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.folderDTO.FolderPathResponseDTO;
-import com.example.demo.dto.folderDTO.FolderPythonRequestDTO;
-import com.example.demo.dto.folderDTO.FolderRequestDTO;
-import com.example.demo.dto.folderDTO.FolderSelectableDTO;
+import com.example.demo.dto.folderDTO.*;
 import com.example.demo.entity.Folder;
 import com.example.demo.service.FolderService;
 import lombok.RequiredArgsConstructor;
@@ -82,5 +79,11 @@ public class FolderController {
     public ResponseEntity<List<FolderPathResponseDTO>> getFolderPathAPI(@PathVariable Long folderId) {
         List<FolderPathResponseDTO> path = folderService.getFolderPath(folderId);
         return ResponseEntity.ok(path);
+    }
+
+    @GetMapping("/search/{userId}/{input}")
+    public ResponseEntity<List<FolderSearchResponseDTO>> searchFolder(@PathVariable Long userId, @PathVariable String input) {
+        List<FolderSearchResponseDTO> folders = folderService.searchFolder(userId, input);
+        return ResponseEntity.ok(folders);
     }
 }
