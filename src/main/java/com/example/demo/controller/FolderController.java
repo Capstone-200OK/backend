@@ -51,6 +51,12 @@ public class FolderController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/cloud-visible/{userId}")
+    public ResponseEntity<List<FolderPythonRequestDTO>> getCloudVisibleFolders(@PathVariable Long userId) {
+        return ResponseEntity.ok(folderService.getAccessibleCloudRoots(userId));
+    }
+
+
     @GetMapping("/hierarchy/{folderId}/{userId}")
     public FolderPythonRequestDTO getFolderHierarchy(
             @PathVariable Long folderId,

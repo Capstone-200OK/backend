@@ -253,6 +253,30 @@ public class FolderService {
     }
 
     @Transactional
+    public List<FolderPythonRequestDTO> getAccessibleCloudRoots(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 1. 유저가 접근 가능한 모든 클라우드 폴더 조회
+        List<Folder> allAccessible = folderAccessService.getAccessibleCloudFolders(user).stream()
+                .filter(f -> f.getFolderType() == FolderType.CLOUD && !f.getIsDeleted())
+                .toList();
+
+        // 2. 그 중에서 부모 폴더에 접근 권한이 없는 경우만 필터링 → 루트처럼 보이게 함
+        List<Folder> topLevelVisible = allAccessible.stream()
+                .filter(folder -> {
+                    Folder parent = folder.getParentFolder();
+                    return parent == null || !folderAccessService.canAccess(user, parent);
+                })
+                .toList();
+
+        return topLevelVisible.stream()
+                .map(folder -> buildFolderDTO(folder, user))
+                .toList();
+    }
+
+
+    @Transactional
     public List<FolderSelectableDTO> findSelectableFolders(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
