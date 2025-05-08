@@ -257,6 +257,7 @@ public class FileService {
                     .fileName(file.getName())
                     .parentFolderId(file.getFolder().getId())
                     .parentFolderName(file.getFolder().getName())
+                    .folderType(file.getFolder().getFolderType())
                     .build());
         }
 
