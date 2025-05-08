@@ -48,7 +48,7 @@ public class OrganizeController {
         List<Long> folderIds = folderIdsRaw.stream().map(Long::valueOf).toList();
         String sortType = (String) payload.get("mode");
         Long destinationFolderId = ((Number) payload.get("destinationFolderId")).longValue();
-
+        Boolean fileNameChange = (Boolean) payload.get("fileNameChange");
         Folder destFolder = folderRepository.findById(destinationFolderId)
                 .orElseThrow(() -> new RuntimeException("Destination folder not found"));
         String outputPath = folderService.buildFullPath(destFolder);
@@ -61,6 +61,7 @@ public class OrganizeController {
         requestToPython.put("userId", payload.get("userId"));
         requestToPython.put("isScheduled", payload.getOrDefault("isScheduled", false));
         requestToPython.put("isMaintain", payload.getOrDefault("isMaintain", false));
+        requestToPython.put("fileNameChange", payload.getOrDefault("fileNameChange", false));
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 PYTHON_SERVER_URL + "/organize_folder",
                 requestToPython,
