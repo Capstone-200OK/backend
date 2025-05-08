@@ -25,9 +25,16 @@ public class UserController {
         return ResponseEntity.ok(true);
     }
 
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<UserResponseDTO> findByEmail(@PathVariable String email) {
+        UserResponseDTO response =  userService.findByEmail(email);
+        return ResponseEntity.ok(response);
+    }
+
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<MessageResponse> deleteUser(@PathVariable("userId") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(new MessageResponse("회원 탈퇴 성공"));
     }
+
 }

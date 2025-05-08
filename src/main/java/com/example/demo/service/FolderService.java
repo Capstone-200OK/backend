@@ -88,8 +88,9 @@ public class FolderService {
         Folder saved = folderRepository.save(folder);
 
         // 생성자에게 full 권한 부여
-        folderAccessService.grantAccess(user.getId(), saved.getId(), 7);
-
+        if (folder.getFolderType() == FolderType.CLOUD) {
+            folderAccessService.grantAccess(user.getId(), saved.getId(), 7);
+        }
         // 부모 폴더 권한 상속 (Cloud 폴더의 경우만 의미 있음)
         if (parent != null) {
             List<FolderAccess> parentAccesses = folderAccessService.getAllAccessByFolder(parent.getId());
