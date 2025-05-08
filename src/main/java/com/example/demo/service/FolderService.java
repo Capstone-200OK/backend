@@ -357,6 +357,7 @@ public class FolderService {
                     .folderId(folder.getId())
                     .folderName(folder.getName())
                     .parentFolderName(folder.getParentFolder().getName())
+                    .folderType(folder.getFolderType())
                     .build());
         }
 

@@ -1,5 +1,6 @@
 package com.example.demo.dto.fileDTO;
 
+import com.example.demo.entity.FolderType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,4 +11,5 @@ public class FileSearchResponseDTO {
     private String fileName;
     private Long parentFolderId;
     private String parentFolderName;
+    private FolderType folderType;
 }
