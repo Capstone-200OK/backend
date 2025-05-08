@@ -38,7 +38,7 @@ public class UserService {
         User user = User.builder()
                 .nickName(userDTO.getNickname())
                 .email(userDTO.getEmail())
-                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .password((userDTO.getPassword()))
                 .build();
 
         folderAccessService.grantAccess(user.getId(), 2L, 7);  // 7 = rwx 권한
