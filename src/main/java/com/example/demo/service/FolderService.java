@@ -4,16 +4,15 @@ import com.example.demo.dto.fileDTO.FilePythonRequestDTO;
 import com.example.demo.dto.folderDTO.*;
 import com.example.demo.entity.*;
 import com.example.demo.repository.FileRepository;
+import com.example.demo.repository.FolderAccessRepository;
 import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +22,7 @@ public class FolderService {
     private final FolderRepository folderRepository;
     private final FileRepository fileRepository;
     private final FolderAccessService folderAccessService;
+    private final FolderAccessRepository folderAccessRepository;
 
     @Transactional
     public Optional<Folder> findFolderByName(FolderRequestDTO folderRequestDTO) {
@@ -66,16 +66,16 @@ public class FolderService {
                     .orElseThrow(() -> new RuntimeException("Root folder (id=1) not found"));
         }
 
-        FolderType type = folderRequestDTO.getFolderType() != null ? folderRequestDTO.getFolderType() : FolderType.PERSONAL;
+        FolderType type = parent.getFolderType() != null ? parent.getFolderType() : FolderType.PERSONAL;
 
-        if (type == FolderType.CLOUD && parent != null) {
+        if (type == FolderType.CLOUD) {
             // Cloud일 경우 parentFolder에 대한 write 권한이 있어야 함
-            if (!folderAccessService.canWrite(user, parent)) {
+            if (parent.getId() != 2L && !folderAccessService.canWrite(user, parent)) {
                 throw new RuntimeException("You do not have write permission for the parent cloud folder.");
             }
         }
 
-        String resolvedName = resolveDuplicateFolderName(user.getId(), parent == null ? null : parent.getId(), folderRequestDTO.getName());
+        String resolvedName = resolveDuplicateFolderName(user.getId(), parent.getId(), folderRequestDTO.getName());
 
         Folder folder = Folder.builder()
                 .name(resolvedName)
@@ -324,9 +324,34 @@ public class FolderService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<FolderSearchResponseDTO> folders = new ArrayList<>();
+        Set<Long> addedFolderIds = new HashSet<>();
 
-        List<Folder> folderList = folderRepository.findAllByNameContainingIgnoreCaseAndUser(input, user);
+        // 🔹 내 폴더 검색
+        List<Folder> folderList =
+                folderRepository.findAllByNameContainingIgnoreCaseAndIsDeletedFalseAndUser(input, user);
+
         for (Folder folder : folderList) {
+            addedFolderIds.add(folder.getId());
+        }
+
+        // 🔹 다른 사용자의 CLOUD 폴더 중 접근 가능한 것만
+        List<Folder> externalFolders =
+                folderRepository.searchExternalCloudFolders(input, user);
+
+        for (Folder folder : externalFolders) {
+            List<FolderAccess> accesses = folderAccessRepository.findAllByFolder(folder);
+            for (FolderAccess access : accesses) {
+                if (access.getUser().equals(user) && !addedFolderIds.contains(folder.getId())) {
+                    folderList.add(folder);
+                    addedFolderIds.add(folder.getId());
+                    break; // 한 번 추가되면 더 이상 확인할 필요 없음
+                }
+            }
+        }
+
+        // 🔹 DTO 변환
+        for (Folder folder : folderList) {
+            if (folder.getParentFolder() == null) continue; // 예외 처리
             folders.add(FolderSearchResponseDTO.builder()
                     .folderId(folder.getId())
                     .folderName(folder.getName())
