@@ -2,7 +2,6 @@ package com.example.demo.scheduler;
 
 import com.example.demo.entity.Folder;
 import com.example.demo.entity.ScheduledTask;
-import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.ScheduledTaskRepository;
 import com.example.demo.service.FolderService;
 import jakarta.transaction.Transactional;
@@ -13,6 +12,10 @@ import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.socket.TextMessage;
+import com.example.demo.config.WebSocketSessionManager;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,12 +27,11 @@ public class ScheduledTaskScheduler {
 
     private final ScheduledTaskRepository taskRepository;
     private final FolderService folderService;
-    private final FolderRepository folderRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     private static final String BASE_URL = "http://localhost:8080";
 
-    @Scheduled(cron = "0 0 * * * *") //
+    @Scheduled(cron = "0 * * * * *") //
     @Transactional
     public void executeScheduledTasks() {
         LocalDateTime now = LocalDateTime.now();
@@ -59,6 +61,20 @@ public class ScheduledTaskScheduler {
                 restTemplate.postForObject(BASE_URL + "/organize/start", request, String.class);
 
                 System.out.println("[ScheduledTask] 실행됨: taskId=" + task.getId());
+
+                // ✅ WebSocket 알림 전송
+                Map<String, Object> payload = Map.of(
+                        "userId", task.getUser().getId(),
+                        "message", String.format("'%s' 폴더가 '%s'로 이동되었습니다.", previousFolder.getName(), destinationFolder.getName())
+                );
+                ObjectMapper objectMapper = new ObjectMapper();
+                String json = objectMapper.writeValueAsString(payload);
+
+                for (WebSocketSession session : WebSocketSessionManager.getSessions()) {
+                    if (session.isOpen()) {
+                        session.sendMessage(new TextMessage(json));
+                    }
+                }
 
                 updateNextExecuted(task, now);
             } catch (Exception e) {
