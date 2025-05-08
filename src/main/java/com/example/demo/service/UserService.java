@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
     final private UserRepository userRepository;
+    final private FolderAccessService folderAccessService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
     public UserResponseDTO login(LoginDTO loginDTO) {
         User user = userRepository.findByEmail(loginDTO.getEmail())
@@ -39,6 +40,8 @@ public class UserService {
                 .email(userDTO.getEmail())
                 .password(passwordEncoder.encode(userDTO.getPassword()))
                 .build();
+
+        folderAccessService.grantAccess(user.getId(), 2L, 7);  // 7 = rwx 권한
 
         userRepository.save(user);
     }
