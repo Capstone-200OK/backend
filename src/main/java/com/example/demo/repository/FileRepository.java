@@ -27,5 +27,5 @@ public interface FileRepository extends JpaRepository<File, Long> {
     @Modifying
     @Query("DELETE FROM File f WHERE f.id = :id")
     void deleteByFileId(@Param("id") @NonNull Long id);
-    List<File> findAllByNameContainingIgnoreCaseAndUser(String name, User user);
+    List<File> findAllByNameContainingIgnoreCaseAndIsDeletedFalseAndUser(String name, User user);
 }

@@ -250,7 +250,7 @@ public class FileService {
 
         List<FileSearchResponseDTO> files = new ArrayList<>();
 
-        List<File> fileList = fileRepository.findAllByNameContainingIgnoreCaseAndUser(input, user);
+        List<File> fileList = fileRepository.findAllByNameContainingIgnoreCaseAndIsDeletedFalseAndUser(input, user);
         for (File file : fileList) {
             files.add(FileSearchResponseDTO.builder()
                     .fileId(file.getId())

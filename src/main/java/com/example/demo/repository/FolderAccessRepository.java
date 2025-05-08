@@ -23,4 +23,5 @@ public interface FolderAccessRepository extends JpaRepository<FolderAccess, Long
     @Transactional
     @Query("DELETE FROM FolderAccess fa WHERE fa.folder.id = :folderId")
     void deleteAllByFolderId(Long folderId);
+    List<FolderAccess> findAllByFolder(Folder folder);
 }
