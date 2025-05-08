@@ -31,7 +31,7 @@ public class ScheduledTaskScheduler {
 
     private static final String BASE_URL = "http://localhost:8080";
 
-    @Scheduled(cron = "0 * * * * *") //
+    @Scheduled(cron = "0 0 * * * *") //
     @Transactional
     public void executeScheduledTasks() {
         LocalDateTime now = LocalDateTime.now();
