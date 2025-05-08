@@ -68,7 +68,7 @@ public class FolderService {
 
         FolderType type = folderRequestDTO.getFolderType() != null ? folderRequestDTO.getFolderType() : FolderType.PERSONAL;
 
-        if (type == FolderType.CLOUD && parent != null) {
+        if (type == FolderType.CLOUD && parent.getFolderType() == FolderType.CLOUD) {
             // Cloud일 경우 parentFolder에 대한 write 권한이 있어야 함
             if (!folderAccessService.canWrite(user, parent)) {
                 throw new RuntimeException("You do not have write permission for the parent cloud folder.");
