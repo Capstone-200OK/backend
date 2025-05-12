@@ -31,8 +31,12 @@ public class TrashBinController {
     }
 
     // 휴지통에서 완전 삭제
-    @DeleteMapping("/delete")
+    @PostMapping("/delete")
     public ResponseEntity<MessageResponse> deletePermanently(@RequestBody List<Long> trashIds) {
+        if (trashIds == null || trashIds.isEmpty()) {
+            return ResponseEntity.badRequest().body(new MessageResponse("삭제할 ID 목록이 비어있습니다."));
+        }
+
         trashBinService.deleteAllPermanently(trashIds);
         return ResponseEntity.ok(new MessageResponse("휴지통에서 삭제되었습니다."));
     }
