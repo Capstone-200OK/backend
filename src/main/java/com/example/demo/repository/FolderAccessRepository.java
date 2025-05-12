@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface FolderAccessRepository extends JpaRepository<FolderAccess, Long> {
     List<FolderAccess> findByUser(User user);
     boolean existsByUserAndFolder(User user, Folder folder);
+    boolean existsByUserIdAndFolderId(Long userId, Long folderId);
     Optional<FolderAccess> findByUserIdAndFolderId(Long userId, Long folderId);
 
     List<FolderAccess> findByFolderId(Long parentId);

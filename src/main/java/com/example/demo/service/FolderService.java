@@ -322,7 +322,7 @@ public class FolderService {
         pathBuilder.append(folder.getName());
     }
 
-    public List<FolderPathResponseDTO> getFolderPath(Long folderId) {
+    public List<FolderPathResponseDTO> getFolderPath(Long folderId, Long userId) {
         Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
                 .orElseThrow(() -> new RuntimeException("Folder not found"));
 
@@ -330,6 +330,12 @@ public class FolderService {
 
         // 현재 폴더부터 상위 폴더까지 역순으로 수집
         while (folder != null) {
+            // CLOUD라면
+            if (userId != null) {
+                if (!folderAccessRepository.existsByUserIdAndFolderId(userId, folderId))
+                    break;
+            }
+
             path.add(FolderPathResponseDTO.builder()
                     .folderId(folder.getId())
                     .folderName(folder.getName())

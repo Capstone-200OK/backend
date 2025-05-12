@@ -83,7 +83,13 @@ public class FolderController {
 
     @GetMapping("/path/{folderId}")
     public ResponseEntity<List<FolderPathResponseDTO>> getFolderPathAPI(@PathVariable Long folderId) {
-        List<FolderPathResponseDTO> path = folderService.getFolderPath(folderId);
+        List<FolderPathResponseDTO> path = folderService.getFolderPath(folderId, null);
+        return ResponseEntity.ok(path);
+    }
+
+    @GetMapping("/cloudPath/{userId}/{folderId}")
+    public ResponseEntity<List<FolderPathResponseDTO>> getCloudFolderPathAPI(@PathVariable Long userId, @PathVariable Long folderId) {
+        List<FolderPathResponseDTO> path = folderService.getFolderPath(folderId, userId);
         return ResponseEntity.ok(path);
     }
 
