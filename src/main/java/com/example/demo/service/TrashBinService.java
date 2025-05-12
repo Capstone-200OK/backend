@@ -9,6 +9,7 @@ import com.example.demo.repository.FileRepository;
 import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.TrashBinRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.repository.FolderAccessRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class TrashBinService {
     private final FolderRepository folderRepository;
     private final TrashBinRepository trashBinRepository;
     private final UserRepository userRepository;
+    private final FolderAccessRepository folderAccessRepository;
 
     // 휴지통으로 이동
     @Transactional
@@ -214,7 +216,6 @@ public class TrashBinService {
         }
     }
 
-    @Transactional
     public void deletePermanently(Long trashId) {
         TrashBin trash = trashBinRepository.findById(trashId)
                 .orElseThrow(() -> new RuntimeException("휴지통 항목이 존재하지 않습니다."));
@@ -240,6 +241,9 @@ public class TrashBinService {
         for (Folder child : children) {
             deleteFolderAndContents(child);
         }
+
+        // folder_access 삭제
+        folderAccessRepository.deleteAllByFolderId(folder.getId());
 
         folderRepository.delete(folder);
     }
