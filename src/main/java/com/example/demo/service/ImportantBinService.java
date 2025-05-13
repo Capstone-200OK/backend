@@ -108,6 +108,7 @@ public class ImportantBinService {
         return importantBinRepository.findAll().stream()
                 .filter(important -> important.getUser().getId().equals(userId))
                 .filter(important -> important.getFolder() != null)
+                .filter(important -> !important.getFolder().getIsDeleted())
                 .map(important -> ImportantBinFolderResponseDTO.builder()
                         .importantId(important.getId())
                         .folderId(important.getFolder().getId())
