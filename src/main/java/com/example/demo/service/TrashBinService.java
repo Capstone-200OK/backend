@@ -10,6 +10,7 @@ import com.example.demo.repository.FolderRepository;
 import com.example.demo.repository.TrashBinRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.repository.FolderAccessRepository;
+import com.example.demo.repository.ImportantBinRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,7 @@ public class TrashBinService {
     private final TrashBinRepository trashBinRepository;
     private final UserRepository userRepository;
     private final FolderAccessRepository folderAccessRepository;
+    private final ImportantBinRepository importantBinRepository;
 
     // 휴지통으로 이동
     @Transactional
@@ -232,18 +234,22 @@ public class TrashBinService {
     }
 
     private void deleteFolderAndContents(Folder folder) {
+        Long folderId = folder.getId();
         // 파일 삭제
-        List<File> files = fileRepository.findByFolderId(folder.getId());
+        List<File> files = fileRepository.findByFolderId(folderId);
         fileRepository.deleteAll(files);
+        importantBinRepository.deleteAllByFileIn(files);
 
         // 하위 폴더 재귀 삭제
-        List<Folder> children = folderRepository.findByParentFolderId(folder.getId());
+        List<Folder> children = folderRepository.findByParentFolderId(folderId);
         for (Folder child : children) {
             deleteFolderAndContents(child);
         }
 
         // folder_access 삭제
-        folderAccessRepository.deleteAllByFolderId(folder.getId());
+        folderAccessRepository.deleteAllByFolderId(folderId);
+        // important_bin 삭제
+        importantBinRepository.deleteAllByFolderId(folderId);
 
         folderRepository.delete(folder);
     }

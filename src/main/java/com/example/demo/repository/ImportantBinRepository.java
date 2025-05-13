@@ -25,4 +25,5 @@ public interface ImportantBinRepository extends JpaRepository<ImportantBin, Long
     void deleteAllByFileId(Long fileId);
     boolean existsByUserAndFile(User user, File file);
     boolean existsByUserAndFolder(User user, Folder folder);
+    void deleteAllByFileIn(List<File> files);
 }
