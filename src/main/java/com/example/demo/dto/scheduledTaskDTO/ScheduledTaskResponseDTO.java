@@ -12,6 +12,8 @@ import java.time.LocalDateTime;
 public class ScheduledTaskResponseDTO {
     private Long taskId;
     private Long userId;
+    private Long previousFolderId;
+    private Long newFolderId;
     private String previousFolderName;
     private String newFolderName;
     private Criteria criteria;
