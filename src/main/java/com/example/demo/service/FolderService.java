@@ -321,6 +321,13 @@ public class FolderService {
         }
         pathBuilder.append(folder.getName());
     }
+    public String buildAbsolutePath(Long folderId) {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new RuntimeException("Folder not found"));
+        StringBuilder pathBuilder = new StringBuilder();
+        buildPathRecursive(folder, pathBuilder);
+        return pathBuilder.toString();
+    }
 
     public List<FolderPathResponseDTO> getFolderPath(Long folderId, Long userId) {
         Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
@@ -393,4 +400,5 @@ public class FolderService {
 
         return folders;
     }
+
 }

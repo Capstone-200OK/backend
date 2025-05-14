@@ -36,9 +36,9 @@ public class SortingHistoryController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/selectedList/{sortingId}")
-    public ResponseEntity<SortingHistorySelectedResponseDTO> getSortingHistorySelectedFiles(@PathVariable Long sortingId) {
-        SortingHistorySelectedResponseDTO response = sortingHistoryService.getSortingHistorySelectedFiles(sortingId);
+    @GetMapping("/selectedList/{sortingId}/{userId}")
+    public ResponseEntity<SortingHistorySelectedResponseDTO> getSortingHistorySelectedFiles(@PathVariable Long sortingId, @PathVariable Long userId) {
+        SortingHistorySelectedResponseDTO response = sortingHistoryService.getSortingHistorySelectedFiles(sortingId, userId);
         return ResponseEntity.ok(response);
     }
 

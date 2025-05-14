@@ -98,4 +98,8 @@ public class FolderController {
         List<FolderSearchResponseDTO> folders = folderService.searchFolder(userId, input);
         return ResponseEntity.ok(folders);
     }
+    @GetMapping("/absolute-path/{folderId}")
+    public ResponseEntity<String> getAbsolutePath(@PathVariable Long folderId) {
+        return ResponseEntity.ok(folderService.buildAbsolutePath(folderId));
+    }
 }

@@ -41,7 +41,9 @@ public class UserService {
                 .password((userDTO.getPassword()))
                 .build();
 
+/*
         folderAccessService.grantAccess(user.getId(), 2L, 7);  // 7 = rwx 권한
+*/
 
         userRepository.save(user);
     }

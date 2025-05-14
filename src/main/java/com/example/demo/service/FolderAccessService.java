@@ -80,6 +80,28 @@ public class FolderAccessService {
     public List<FolderAccess> getAllAccessByFolder(Long parentId) {
         return folderAccessRepository.findByFolderId(parentId);
     }
+
+    public Folder findTopAccessibleRoot(User user, Folder folder) {
+        Folder current = folder;
+
+        while (current.getParentFolder() != null) {
+            Folder parent = current.getParentFolder();
+
+            if (current.getFolderType() == FolderType.PERSONAL) {
+                // 개인 폴더: 사용자가 소유자인지 확인
+                if (!parent.getUser().getId().equals(user.getId())) break;
+            } else if (current.getFolderType() == FolderType.CLOUD) {
+                // 클라우드 폴더: 상위 폴더 접근 가능한지 확인
+                if (!canAccess(user, parent)) break;
+            }
+
+            current = parent;
+        }
+
+        return current;
+    }
+
+
     @Transactional(readOnly = true)
     public Optional<Folder> findAccessibleRootCloudFolderByName(User user, String name) {
         return folderAccessRepository.findByUser(user).stream()
