@@ -25,6 +25,7 @@ public class TrashBinService {
     private final ImportantBinRepository importantBinRepository;
     private final FileSortingHistoryRepository fileSortingHistoryRepository;
     private final FolderSortingHistoryRepository folderSortingHistoryRepository;
+    private final ScheduledTaskRepository scheduledTaskRepository;
 
     // 휴지통으로 이동
     @Transactional
@@ -244,7 +245,10 @@ public class TrashBinService {
             deleteFolderAndContents(child);
         }
 
+        scheduledTaskRepository.deleteAllByPreviousFolderId(folderId);
+        scheduledTaskRepository.deleteAllByNewFolderId(folderId);
         fileSortingHistoryRepository.deleteAllByPreviousFolderId(folderId);
+        fileSortingHistoryRepository.deleteAllByNewFolderId(folderId);
         folderSortingHistoryRepository.deleteAllByFolderId(folderId);
         // folder_access 삭제
         folderAccessRepository.deleteAllByFolderId(folderId);
