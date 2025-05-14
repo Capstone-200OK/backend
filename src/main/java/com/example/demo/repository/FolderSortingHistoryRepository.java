@@ -21,4 +21,8 @@ public interface FolderSortingHistoryRepository extends JpaRepository<FolderSort
     @Transactional
     @Query("DELETE FROM FolderSortingHistory f WHERE f.sorting.id = :sortingId")
     void deleteAllBySortingId(@Param("sortingId") Long sortingId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM FolderSortingHistory fsh WHERE fsh.folder.id = :folderId")
+    void deleteAllByFolderId(Long folderId);
 }

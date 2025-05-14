@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.entity.File;
 import com.example.demo.entity.FileSortingHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,4 +17,9 @@ public interface FileSortingHistoryRepository extends JpaRepository<FileSortingH
     @Transactional
     @Query("DELETE FROM FileSortingHistory f WHERE f.sorting.id = :sortingId")
     void deleteAllBySortingId(@Param("sortingId") Long sortingId);
+    void deleteAllByFileIn(List<File> files);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM FileSortingHistory f WHERE f.previousFolder.id = :previousFolderId")
+    void deleteAllByPreviousFolderId(@Param("previousFolderId") Long previousFolderId);
 }
