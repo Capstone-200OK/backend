@@ -22,4 +22,8 @@ public interface FileSortingHistoryRepository extends JpaRepository<FileSortingH
     @Transactional
     @Query("DELETE FROM FileSortingHistory f WHERE f.previousFolder.id = :previousFolderId")
     void deleteAllByPreviousFolderId(@Param("previousFolderId") Long previousFolderId);
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM FileSortingHistory f WHERE f.newFolder.id = :newFolderId")
+    void deleteAllByNewFolderId(@Param("newFolderId") Long newFolderId);
 }
