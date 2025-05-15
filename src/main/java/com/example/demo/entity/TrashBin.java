@@ -23,11 +23,11 @@ public class TrashBin {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "folder_id", nullable = true)
+    @JoinColumn(name = "folder_id")
     private Folder folder;
 
     @ManyToOne
-    @JoinColumn(name = "file_id", nullable = true)
+    @JoinColumn(name = "file_id")
     private File file;
 
     @CreationTimestamp

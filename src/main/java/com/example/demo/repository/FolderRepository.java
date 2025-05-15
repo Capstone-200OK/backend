@@ -21,7 +21,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     // 2) 부모가 null인 폴더를 찾기 위한 별도 메서드 (루트 폴더용)
     Optional<Folder> findByNameAndParentFolderIsNullAndUser(String name, User user);
     List<Folder> findByParentFolderId(Long parentFolderId);
-    List<Folder> findByUserIdAndIsDeletedFalseAndFolderType(Long userId, FolderType folderType);
     @Transactional
     @Modifying
     @Query("DELETE FROM Folder f WHERE f.id = :id")
@@ -30,7 +29,6 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
     boolean existsByParentFolderIdAndNameAndIdNotAndIsDeletedFalse(Long parentFolderId, String name, Long id);
     // 또는 parent가 null인 경우를 위해 별도로:
     boolean existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(Long userId, String name);
-    boolean existsByUserIdAndParentFolderIsNullAndName(Long userId, String name);
 
     @Query("SELECT f FROM Folder f WHERE f.id = :id AND f.isDeleted = false")
     Optional<Folder> findByIdAndIsDeletedFalse(@Param("id") Long id);
