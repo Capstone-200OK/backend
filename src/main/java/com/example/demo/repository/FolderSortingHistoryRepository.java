@@ -22,14 +22,6 @@ public interface FolderSortingHistoryRepository extends JpaRepository<FolderSort
     List<FolderSortingHistory> findBySortingIdAndStatus(Long sortingId, FolderStatus status);
 
     /**
-     * 정리 기록 ID로 폴더 정리 이력 조회
-     *
-     * @param sortingId 정리 기록 ID
-     * @return 폴더 정리 이력 리스트
-     */
-    List<FolderSortingHistory> findBySortingId(Long sortingId);
-
-    /**
      * 정리 기록 ID로 폴더 정리 이력 전체 삭제
      *
      * @param sortingId 삭제할 정리 기록 ID
