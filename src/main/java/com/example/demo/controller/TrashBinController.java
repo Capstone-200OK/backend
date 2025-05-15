@@ -1,11 +1,13 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.trashBinDTO.*;
 import com.example.demo.dto.MessageResponse;
+import com.example.demo.dto.trashBinDTO.TrashBinFileResponseDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinFolderResponseDTO;
+import com.example.demo.dto.trashBinDTO.TrashBinRequestDTO;
 import com.example.demo.service.TrashBinService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -16,47 +18,40 @@ public class TrashBinController {
 
     private final TrashBinService trashBinService;
 
-    // 휴지통으로 이동
+    // 휴지통으로 파일/폴더 이동
     @PostMapping("/move")
     public ResponseEntity<MessageResponse> moveToTrash(@RequestBody TrashBinRequestDTO dto) {
         trashBinService.moveToTrash(dto);
-        return ResponseEntity.ok(new MessageResponse("휴지통으로 이동되었습니다."));
+        return ResponseEntity.ok(new MessageResponse("Moved to trash"));
     }
 
-    // 휴지통에서 복구
+    // 휴지통에서 파일/폴더 복구
     @PostMapping("/restore")
     public ResponseEntity<MessageResponse> restore(@RequestBody List<Long> trashIds) {
         trashBinService.restoreAll(trashIds);
-        return ResponseEntity.ok(new MessageResponse("복구가 완료되었습니다."));
+        return ResponseEntity.ok(new MessageResponse("Restoration completed"));
     }
 
-    // 휴지통에서 완전 삭제
+    // 휴지통에서 파일/폴더 완전 삭제
     @PostMapping("/delete")
     public ResponseEntity<MessageResponse> deletePermanently(@RequestBody List<Long> trashIds) {
         if (trashIds == null || trashIds.isEmpty()) {
-            return ResponseEntity.badRequest().body(new MessageResponse("삭제할 ID 목록이 비어있습니다."));
+            return ResponseEntity.badRequest().body(new MessageResponse("The list of IDs to delete is empty"));
         }
 
         trashBinService.deleteAllPermanently(trashIds);
-        return ResponseEntity.ok(new MessageResponse("휴지통에서 삭제되었습니다."));
+        return ResponseEntity.ok(new MessageResponse("Deleted from trash"));
     }
 
-    // 휴지통 목록 확인
-
+    // 휴지통에 있는 파일 리스트 반환
     @GetMapping("/files/{userId}")
     public List<TrashBinFileResponseDTO> getDeletedFiles(@PathVariable Long userId) {
         return trashBinService.getDeletedFiles(userId);
     }
 
+    // 휴지통에 있는 폴더 리스트 반환
     @GetMapping("/folders/{userId}")
     public List<TrashBinFolderResponseDTO> getDeletedFolders(@PathVariable Long userId) {
         return trashBinService.getDeletedFolders(userId);
-    }
-
-    // 자동 삭제 테스트용
-    @PostMapping("/autoDelete")
-    public ResponseEntity<Void> deleteExpiredTrash() {
-        trashBinService.deleteExpiredTrash();
-        return ResponseEntity.ok().build();
     }
 }

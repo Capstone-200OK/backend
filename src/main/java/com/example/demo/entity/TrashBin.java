@@ -3,6 +3,7 @@ package com.example.demo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+
 import java.sql.Timestamp;
 
 @Entity
@@ -22,11 +23,11 @@ public class TrashBin {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "folder_id", nullable = true)
+    @JoinColumn(name = "folder_id")
     private Folder folder;
 
     @ManyToOne
-    @JoinColumn(name = "file_id", nullable = true)
+    @JoinColumn(name = "file_id")
     private File file;
 
     @CreationTimestamp
