@@ -154,7 +154,7 @@ public class TrashBinService {
 
             String newName = originalName;
             int counter = 1;
-            while (fileRepository.existsByFolderIdAndNameAndIdNotAndIsDeletedFalse(parent.getId(), newName, file.getId())) {
+            while (parent != null && fileRepository.existsByFolderIdAndNameAndIdNotAndIsDeletedFalse(parent.getId(), newName, file.getId())) {
                 newName = baseName + "(" + counter++ + ")" + extension;
             }
 
