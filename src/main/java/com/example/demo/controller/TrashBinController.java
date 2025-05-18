@@ -18,21 +18,36 @@ public class TrashBinController {
 
     private final TrashBinService trashBinService;
 
-    // 휴지통으로 파일/폴더 이동
+    /**
+     * 파일 또는 폴더를 휴지통으로 이동
+     *
+     * @param dto 휴지통 이동 요청 정보
+     * @return 처리 결과 메시지
+     */
     @PostMapping("/move")
     public ResponseEntity<MessageResponse> moveToTrash(@RequestBody TrashBinRequestDTO dto) {
         trashBinService.moveToTrash(dto);
         return ResponseEntity.ok(new MessageResponse("Moved to trash"));
     }
 
-    // 휴지통에서 파일/폴더 복구
+    /**
+     * 휴지통에서 파일 및 폴더 복구
+     *
+     * @param trashIds 복구할 항목 ID 리스트
+     * @return 처리 결과 메시지
+     */
     @PostMapping("/restore")
     public ResponseEntity<MessageResponse> restore(@RequestBody List<Long> trashIds) {
         trashBinService.restoreAll(trashIds);
         return ResponseEntity.ok(new MessageResponse("Restoration completed"));
     }
 
-    // 휴지통에서 파일/폴더 완전 삭제
+    /**
+     * 휴지통에서 파일 및 폴더 완전 삭제
+     *
+     * @param trashIds 삭제할 항목 ID 리스트
+     * @return 처리 결과 메시지
+     */
     @PostMapping("/delete")
     public ResponseEntity<MessageResponse> deletePermanently(@RequestBody List<Long> trashIds) {
         if (trashIds == null || trashIds.isEmpty()) {
@@ -43,13 +58,23 @@ public class TrashBinController {
         return ResponseEntity.ok(new MessageResponse("Deleted from trash"));
     }
 
-    // 휴지통에 있는 파일 리스트 반환
+    /**
+     * 사용자 휴지통에 있는 파일 리스트 조회
+     *
+     * @param userId 사용자 ID
+     * @return 파일 응답 DTO 리스트
+     */
     @GetMapping("/files/{userId}")
     public List<TrashBinFileResponseDTO> getDeletedFiles(@PathVariable Long userId) {
         return trashBinService.getDeletedFiles(userId);
     }
 
-    // 휴지통에 있는 폴더 리스트 반환
+    /**
+     * 사용자 휴지통에 있는 폴더 리스트 조회
+     *
+     * @param userId 사용자 ID
+     * @return 폴더 응답 DTO 리스트
+     */
     @GetMapping("/folders/{userId}")
     public List<TrashBinFolderResponseDTO> getDeletedFolders(@PathVariable Long userId) {
         return trashBinService.getDeletedFolders(userId);
