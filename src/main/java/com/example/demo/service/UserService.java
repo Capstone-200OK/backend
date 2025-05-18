@@ -17,9 +17,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final FolderAccessService folderAccessService;
 
-    // 비밀번호 암호화용 인코더
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-
     /**
      * 사용자 로그인
      *

@@ -68,7 +68,7 @@ public class FolderService {
         User user = userRepository.findById(folderRequestDTO.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Folder parent = null;
+        Folder parent;
         if (folderRequestDTO.getParentFolderId() != null) {
             parent = folderRepository.findById(folderRequestDTO.getParentFolderId())
                     .orElseThrow(() -> new IllegalArgumentException("Parent folder not found"));

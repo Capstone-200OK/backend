@@ -51,7 +51,6 @@ public class OrganizeController {
         List<Long> folderIds = folderIdsRaw.stream().map(Long::valueOf).toList();
         String sortType = (String) payload.get("mode");
         Long destinationFolderId = ((Number) payload.get("destinationFolderId")).longValue();
-        Boolean fileNameChange = (Boolean) payload.get("fileNameChange");
 
         Folder destFolder = folderRepository.findById(destinationFolderId)
                 .orElseThrow(() -> new RuntimeException("Destination folder not found"));

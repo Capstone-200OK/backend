@@ -200,31 +200,6 @@ public class FileService {
     }
 
     /**
-     * 파일 삭제 처리 (isDeleted = true)
-     *
-     * @param deleteRequestDTO 삭제 요청 정보
-     */
-    @Transactional
-    public void deleteFile(DeleteRequestDTO deleteRequestDTO) {
-        File file = fileRepository.findById(deleteRequestDTO.getFileId())
-                .orElseThrow(() -> new IllegalArgumentException("File not found"));
-
-        Folder folder = file.getFolder();
-        User user = file.getUser();
-
-        // 삭제 권한 체크
-        if (folder.getFolderType() == FolderType.PERSONAL &&
-                !folder.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("You do not have permission to delete this personal file.");
-        } else if (folder.getFolderType() == FolderType.CLOUD &&
-                !folderAccessService.canDelete(user, folder)) {
-            throw new RuntimeException("You do not have delete permission for this cloud file.");
-        }
-
-        file.setIsDeleted(true);
-    }
-
-    /**
      * 폴더 내 삭제되지 않은 파일 개수 조회
      *
      * @param folderId 폴더 ID
