@@ -27,11 +27,6 @@ public class UserService {
         User user = userRepository.findByEmail(loginDTO.getEmail())
                 .orElseThrow(() -> new RuntimeException("등록되지 않은 이메일입니다."));
 
-        // ⚠️ 실제 배포 시엔 아래 로직으로 암호화된 비밀번호 검사할 것
-        // if (!passwordEncoder.matches(loginDTO.getPassword(), user.getPassword())) {
-        //     throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        // }
-
         // 지금은 암호화 없이 단순 문자열 비교
         if (!loginDTO.getPassword().equals(user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
