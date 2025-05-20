@@ -53,9 +53,6 @@ public class UserService {
                 .password(userDTO.getPassword()) // ⚠️ 실제 운영 시엔 passwordEncoder.encode() 필요
                 .build();
 
-        // 기본 클라우드 폴더(2번) Full 접근 권한 부여
-        folderAccessService.grantAccess(user.getId(), 2L, 7); // 7: rwx
-
         // DB 저장
         userRepository.save(user);
     }

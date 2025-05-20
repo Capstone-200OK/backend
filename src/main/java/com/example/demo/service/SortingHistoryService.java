@@ -6,10 +6,13 @@ import com.example.demo.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.example.demo.repository.ImportantBinRepository;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +28,7 @@ public class SortingHistoryService {
     private final FolderRepository folderRepository;
     private final FolderAccessRepository folderAccessRepository;
     private final ImportantBinRepository importantBinRepository;
+    private final FolderAccessService folderAccessService;
 
     /**
      * 자동 분류 기록 저장
@@ -294,23 +298,48 @@ public class SortingHistoryService {
      * @param sortingId 자동 분류 기록 ID
      * @return 파일 이동 정보 DTO
      */
-    public SortingHistorySelectedResponseDTO getSortingHistorySelectedFiles(Long sortingId) {
+    public SortingHistorySelectedResponseDTO getSortingHistorySelectedFiles(Long sortingId, Long userId) {
         List<FileSortingHistory> fileHistories = fileSortingHistoryRepository.findBySortingId(sortingId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<SortingHistoryFileResponseDTO> fileResponses = fileHistories.stream().map(history -> {
             File file = history.getFile();
             Folder previousFolder = history.getPreviousFolder();
             Folder currentFolder = file.getFolder();
 
+            // 1. 유저가 접근할 수 있는 root 기준 찾기
+            Folder prevRoot = folderAccessService.findTopAccessibleRoot(user, previousFolder);
+            Folder currRoot = folderAccessService.findTopAccessibleRoot(user, currentFolder);
+
+            // 2. 각각 fullPath 만들기 (CloudRoot/부터 시작)
+            String prevPath = "CloudRoot/" + buildUserVisiblePath(previousFolder, prevRoot) + "/" + file.getName();
+            String currPath = "CloudRoot/" + buildUserVisiblePath(currentFolder, currRoot) + "/" + file.getName();
+
             return new SortingHistoryFileResponseDTO(
                     previousFolder.getName(),
-                    history.getPreviousFilePath(),
+                    prevPath,
                     currentFolder.getName(),
-                    file.getFilePath()
+                    currPath
             );
         }).toList();
 
         return new SortingHistorySelectedResponseDTO(fileResponses);
+    }
+
+
+    private String buildUserVisiblePath(Folder folder, Folder rootFolder) {
+        List<String> parts = new ArrayList<>();
+
+        Folder current = folder;
+        while (current != null && !current.getId().equals(rootFolder.getParentFolder() != null ? rootFolder.getParentFolder().getId() : null)) {
+            parts.add(current.getName());
+            current = current.getParentFolder();
+        }
+
+        Collections.reverse(parts); // 상위 -> 하위 순서로
+        return String.join("/", parts);
     }
 
     /**
@@ -322,6 +351,6 @@ public class SortingHistoryService {
     public Long getLatestSortingHistoryId(Long userId) {
         return sortingHistoryRepository.findTopByUserIdOrderBySortedAtDesc(userId)
                 .map(SortingHistory::getId)
-                .orElseThrow(() -> new RuntimeException("Sorting history not found"));
+                .orElseThrow(() -> new RuntimeException("정리 기록이 없습니다."));
     }
 }

@@ -164,4 +164,8 @@ public class FolderController {
             );
         }
     }
+    @GetMapping("/absolute-path/{folderId}")
+    public ResponseEntity<String> getAbsolutePath(@PathVariable Long folderId) {
+        return ResponseEntity.ok(folderService.buildAbsolutePath(folderId));
+    }
 }

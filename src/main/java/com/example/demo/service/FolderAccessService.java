@@ -141,9 +141,31 @@ public class FolderAccessService {
      * 사용자가 접근 가능한 루트 클라우드 폴더 조회 (이름 기준)
      *
      * @param user 사용자
-     * @param name 폴더 이름
+     * @param folder 폴더
      * @return 해당 이름의 루트 클라우드 폴더(Optional)
      */
+
+    public Folder findTopAccessibleRoot(User user, Folder folder) {
+        Folder current = folder;
+
+        while (current.getParentFolder() != null) {
+            Folder parent = current.getParentFolder();
+
+            if (current.getFolderType() == FolderType.PERSONAL) {
+                // 개인 폴더: 사용자가 소유자인지 확인
+                if (!parent.getUser().getId().equals(user.getId())) break;
+            } else if (current.getFolderType() == FolderType.CLOUD) {
+                // 클라우드 폴더: 상위 폴더 접근 가능한지 확인
+                if (!canAccess(user, parent)) break;
+            }
+
+            current = parent;
+        }
+
+        return current;
+    }
+
+
     @Transactional(readOnly = true)
     public Optional<Folder> findAccessibleRootCloudFolderByName(User user, String name) {
         return folderAccessRepository.findByUser(user).stream()
@@ -173,17 +195,10 @@ public class FolderAccessService {
                 .filter(folder -> folder.getName().equals(name))
                 .findFirst();
     }
-
-    /**
-     * 해당 사용자가 폴더에 모든 권한(읽기, 쓰기, 삭제)을 갖고 있는지 확인
-     *
-     * @param user 사용자
-     * @param folder 폴더
-     * @return 전체 권한 여부
-     */
     public boolean hasFullPermission(User user, Folder folder) {
         return folderAccessRepository.findByUserIdAndFolderId(user.getId(), folder.getId())
                 .map(access -> access.getChmod() == 7)
                 .orElse(false);
     }
+
 }

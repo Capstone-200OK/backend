@@ -61,9 +61,9 @@ public class SortingHistoryController {
      * @param sortingId 정리 기록 ID
      * @return 파일 이동 상세 정보
      */
-    @GetMapping("/selectedList/{sortingId}")
-    public ResponseEntity<SortingHistorySelectedResponseDTO> getSortingHistorySelectedFiles(@PathVariable Long sortingId) {
-        SortingHistorySelectedResponseDTO response = sortingHistoryService.getSortingHistorySelectedFiles(sortingId);
+    @GetMapping("/selectedList/{sortingId}/{userId}")
+    public ResponseEntity<SortingHistorySelectedResponseDTO> getSortingHistorySelectedFiles(@PathVariable Long sortingId, @PathVariable Long userId) {
+        SortingHistorySelectedResponseDTO response = sortingHistoryService.getSortingHistorySelectedFiles(sortingId, userId);
         return ResponseEntity.ok(response);
     }
 

@@ -385,6 +385,13 @@ public class FolderService {
         }
         pathBuilder.append(folder.getName());
     }
+    public String buildAbsolutePath(Long folderId) {
+        Folder folder = folderRepository.findById(folderId)
+                .orElseThrow(() -> new RuntimeException("Folder not found"));
+        StringBuilder pathBuilder = new StringBuilder();
+        buildPathRecursive(folder, pathBuilder);
+        return pathBuilder.toString();
+    }
 
     /**
      * 폴더 ID로부터 상위 폴더 경로를 구해 반환
@@ -458,4 +465,5 @@ public class FolderService {
 
         return folders;
     }
+
 }
