@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +23,12 @@ public class FolderService {
     private final FolderAccessService folderAccessService;
     private final FolderAccessRepository folderAccessRepository;
 
+    /**
+     * 사용자의 폴더 중 이름과 부모 폴더로 찾기
+     *
+     * @param folderRequestDTO 폴더 요청 정보
+     * @return 찾은 폴더 Optional
+     */
     @Transactional
     public Optional<Folder> findFolderByName(FolderRequestDTO folderRequestDTO) {
         User user = userRepository.findById(folderRequestDTO.getUserId())
@@ -52,12 +57,18 @@ public class FolderService {
         }
     }
 
+    /**
+     * 폴더 생성 (권한 및 중복 이름 체크 포함)
+     *
+     * @param folderRequestDTO 폴더 요청 정보
+     * @return 생성된 폴더
+     */
     @Transactional
     public Folder addFolder(FolderRequestDTO folderRequestDTO) {
         User user = userRepository.findById(folderRequestDTO.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Folder parent = null;
+        Folder parent;
         if (folderRequestDTO.getParentFolderId() != null) {
             parent = folderRepository.findById(folderRequestDTO.getParentFolderId())
                     .orElseThrow(() -> new IllegalArgumentException("Parent folder not found"));
@@ -69,7 +80,7 @@ public class FolderService {
         FolderType type = parent.getFolderType() != null ? parent.getFolderType() : FolderType.PERSONAL;
 
         if (type == FolderType.CLOUD) {
-            // Cloud일 경우 parentFolder에 대한 write 권한이 있어야 함
+            // 클라우드 폴더는 부모 폴더에 쓰기 권한이 있어야 함
             if (parent.getId() != 2L && !folderAccessService.canWrite(user, parent)) {
                 throw new RuntimeException("You do not have write permission for the parent cloud folder.");
             }
@@ -87,29 +98,40 @@ public class FolderService {
 
         Folder saved = folderRepository.save(folder);
 
-        // 생성자에게 full 권한 부여
+        // 클라우드 폴더는 권한 부여 필요
         if (folder.getFolderType() == FolderType.CLOUD) {
             folderAccessService.grantAccess(user.getId(), saved.getId(), 7);
         }
-        // 부모 폴더 권한 상속 (Cloud 폴더의 경우만 의미 있음)
-        if (parent != null) {
-            List<FolderAccess> parentAccesses = folderAccessService.getAllAccessByFolder(parent.getId());
-            for (FolderAccess access : parentAccesses) {
-                if (!access.getUser().getId().equals(user.getId())) {
-                    folderAccessService.grantAccess(access.getUser().getId(), saved.getId(), access.getChmod());
-                }
+
+        // 부모 폴더 권한 상속
+        List<FolderAccess> parentAccesses = folderAccessService.getAllAccessByFolder(parent.getId());
+        for (FolderAccess access : parentAccesses) {
+            if (!access.getUser().getId().equals(user.getId())) {
+                folderAccessService.grantAccess(access.getUser().getId(), saved.getId(), access.getChmod());
             }
         }
 
         return saved;
     }
 
+    /**
+     * 폴더가 존재하지 않으면 새로 생성
+     *
+     * @param folderRequestDTO 폴더 요청 정보
+     * @return 존재하는 또는 생성된 폴더
+     */
     @Transactional
     public Folder findOrCreateFolder(FolderRequestDTO folderRequestDTO) {
         return findFolderByName(folderRequestDTO)
                 .orElseGet(() -> addFolder(folderRequestDTO));
     }
 
+    /**
+     * 폴더를 찾거나 생성하며, 새로 생성했는지 여부도 반환
+     *
+     * @param folderRequestDTO 폴더 요청 정보
+     * @return FolderResult (폴더, 생성 여부)
+     */
     @Transactional
     public FolderResult findOrCreateFolderWithFlag(FolderRequestDTO folderRequestDTO) {
         Optional<Folder> found = findFolderByName(folderRequestDTO);
@@ -121,6 +143,13 @@ public class FolderService {
         }
     }
 
+    /**
+     * 해당 폴더를 기준으로 전체 하위 구조를 반환 (Python 통신용)
+     *
+     * @param folderId 폴더 ID
+     * @param userId   사용자 ID
+     * @return FolderPythonRequestDTO
+     */
     @Transactional
     public FolderPythonRequestDTO getFolderHierarchy(Long folderId, Long userId) {
         Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
@@ -129,24 +158,19 @@ public class FolderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        // 권한 검사
         if (folder.getFolderType() == FolderType.PERSONAL) {
-            if (!isPersonalRoot(folder)) { // ✅ 루트가 아닌 경우만 검사
-                if (!folder.getUser().getId().equals(user.getId())) {
-                    throw new RuntimeException("No access to this personal folder.");
-                }
+            if (!isPersonalRoot(folder) && !folder.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException("No access to this personal folder.");
             }
-            // 루트 personal 폴더는 모든 user 허용
         } else {
-            if (!isCloudRoot(folder)) {
-                if (!folderAccessService.canAccess(user, folder)) {
-                    throw new RuntimeException("No access to this cloud folder.");
-                }
+            if (!isCloudRoot(folder) && !folderAccessService.canAccess(user, folder)) {
+                throw new RuntimeException("No access to this cloud folder.");
             }
         }
 
         return buildFolderDTO(folder, user);
     }
-
 
     private boolean isPersonalRoot(Folder folder) {
         return folder.getParentFolder() == null && folder.getFolderType() == FolderType.PERSONAL;
@@ -156,6 +180,13 @@ public class FolderService {
         return folder.getParentFolder() == null && folder.getFolderType() == FolderType.CLOUD;
     }
 
+    /**
+     * 사용자와 경로로 폴더 ID 조회
+     *
+     * @param userId 사용자 ID
+     * @param path   경로 문자열
+     * @return 폴더 ID
+     */
     @Transactional
     public Long getFolderIdByPath(Long userId, String path) {
         String[] names = path.split("/");
@@ -193,6 +224,14 @@ public class FolderService {
         return current.getId();
     }
 
+    /**
+     * 중복 폴더명을 방지하기 위한 이름 생성
+     *
+     * @param userId         사용자 ID
+     * @param parentFolderId 부모 폴더 ID (null 가능)
+     * @param baseName       생성할 폴더의 기본 이름
+     * @return 중복되지 않는 폴더 이름
+     */
     private String resolveDuplicateFolderName(Long userId, Long parentFolderId, String baseName) {
         String newName = baseName;
         int counter = 1;
@@ -210,20 +249,26 @@ public class FolderService {
         return newName;
     }
 
+    /**
+     * 폴더 및 그 내부 파일, 하위 폴더를 재귀적으로 DTO로 변환
+     *
+     * @param folder 대상 폴더
+     * @param user   접근 유저
+     * @return 변환된 FolderPythonRequestDTO
+     */
     private FolderPythonRequestDTO buildFolderDTO(Folder folder, User user) {
         FolderPythonRequestDTO dto = new FolderPythonRequestDTO();
         dto.setId(folder.getId());
         dto.setName(folder.getName());
         dto.setIsDeleted(folder.getIsDeleted());
 
+        // 파일 목록 구성
         List<File> files = fileRepository.findByFolderIdAndIsDeletedFalse(folder.getId());
         List<FilePythonRequestDTO> fileDTOList = files.stream()
                 .filter(file -> {
                     if (folder.getFolderType() == FolderType.PERSONAL) {
-                        // ✅ 개인 폴더는 본인 파일만
                         return file.getUser().getId().equals(user.getId());
                     } else {
-                        // ✅ 클라우드 폴더는 Read 권한이 있으면 모든 파일 볼 수 있음
                         return folderAccessService.canRead(user, folder);
                     }
                 })
@@ -234,8 +279,7 @@ public class FolderService {
                 .toList();
         dto.setFiles(fileDTOList);
 
-
-        // 하위 폴더 권한 필터링
+        // 하위 폴더 필터링 및 재귀 변환
         List<FolderPythonRequestDTO> subFolderDTOs = folder.getSubFolders().stream()
                 .filter(child -> !child.getIsDeleted())
                 .filter(child -> {
@@ -245,24 +289,28 @@ public class FolderService {
                         return folderAccessService.canAccess(user, child);
                     }
                 })
-                .map(child -> buildFolderDTO(child, user)) // 재귀 호출 시에도 user 전달
+                .map(child -> buildFolderDTO(child, user))
                 .toList();
 
         dto.setSubFolders(subFolderDTOs);
         return dto;
     }
 
+    /**
+     * 사용자가 접근 가능한 클라우드 루트 폴더 목록 반환
+     *
+     * @param userId 사용자 ID
+     * @return 클라우드 루트 폴더 목록
+     */
     @Transactional
     public List<FolderPythonRequestDTO> getAccessibleCloudRoots(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        // 1. 유저가 접근 가능한 모든 클라우드 폴더 조회
         List<Folder> allAccessible = folderAccessService.getAccessibleCloudFolders(user).stream()
                 .filter(f -> f.getFolderType() == FolderType.CLOUD && !f.getIsDeleted())
                 .toList();
 
-        // 2. 그 중에서 부모 폴더에 접근 권한이 없는 경우만 필터링 → 루트처럼 보이게 함
         List<Folder> topLevelVisible = allAccessible.stream()
                 .filter(folder -> {
                     Folder parent = folder.getParentFolder();
@@ -276,6 +324,12 @@ public class FolderService {
     }
 
 
+    /**
+     * 사용자가 이동 가능한 폴더 리스트 반환
+     *
+     * @param userId 사용자 ID
+     * @return 이동 가능 폴더 목록
+     */
     @Transactional
     public List<FolderSelectableDTO> findSelectableFolders(Long userId) {
         User user = userRepository.findById(userId)
@@ -285,14 +339,11 @@ public class FolderService {
 
         return allFolders.stream()
                 .filter(folder -> {
-                    if (folder.getId() == 1L|| folder.getId() == 2L) return true; // ✅ Root 폴더는 모든 유저에게 허용
+                    if (folder.getId() == 1L || folder.getId() == 2L) return true;
                     if (folder.getFolderType() == FolderType.PERSONAL) {
                         return folder.getUser() != null && folder.getUser().getId().equals(user.getId());
                     } else {
-                        System.out.println(user.getId() + ", " +folder.getId());
-                        boolean result = folderAccessService.hasFullPermission(user, folder);
-                        System.out.println("result" + result);
-                        return result;
+                        return folderAccessService.hasFullPermission(user, folder);
                     }
                 })
                 .map(folder -> new FolderSelectableDTO(
@@ -305,19 +356,32 @@ public class FolderService {
     }
 
 
+    /**
+     * 폴더 ID로 폴더 조회
+     *
+     * @param id 폴더 ID
+     * @return 폴더 엔티티
+     */
     public Folder getFolderById(Long id) {
         return folderRepository.findById(id).orElseThrow(() -> new RuntimeException("Folder not found"));
     }
 
+    /**
+     * 폴더의 전체 경로를 문자열로 반환
+     *
+     * @param folder 대상 폴더
+     * @return 전체 경로 문자열
+     */
     public String buildFullPath(Folder folder) {
         StringBuilder pathBuilder = new StringBuilder();
         buildPathRecursive(folder, pathBuilder);
         return pathBuilder.toString();
     }
+
     private void buildPathRecursive(Folder folder, StringBuilder pathBuilder) {
         if (folder.getParentFolder() != null) {
             buildPathRecursive(folder.getParentFolder(), pathBuilder);
-            pathBuilder.append("/");  // 구분자 추가
+            pathBuilder.append("/");
         }
         pathBuilder.append(folder.getName());
     }
@@ -329,19 +393,22 @@ public class FolderService {
         return pathBuilder.toString();
     }
 
+    /**
+     * 폴더 ID로부터 상위 폴더 경로를 구해 반환
+     *
+     * @param folderId 폴더 ID
+     * @param userId   사용자 ID (null 가능)
+     * @return 상위 경로 리스트
+     */
     public List<FolderPathResponseDTO> getFolderPath(Long folderId, Long userId) {
         Folder folder = folderRepository.findByIdAndIsDeletedFalse(folderId)
                 .orElseThrow(() -> new RuntimeException("Folder not found"));
 
         List<FolderPathResponseDTO> path = new ArrayList<>();
 
-        // 현재 폴더부터 상위 폴더까지 역순으로 수집
         while (folder != null) {
-            // CLOUD라면
-            if (userId != null) {
-                if (!folderAccessRepository.existsByUserIdAndFolderId(userId, folderId))
-                    break;
-            }
+            if (userId != null && !folderAccessRepository.existsByUserIdAndFolderId(userId, folder.getId()))
+                break;
 
             path.add(FolderPathResponseDTO.builder()
                     .folderId(folder.getId())
@@ -351,12 +418,17 @@ public class FolderService {
             folder = folder.getParentFolder();
         }
 
-        // Root → ... → 대상 순서로 정렬
         Collections.reverse(path);
-
         return path;
     }
 
+    /**
+     * 사용자 입력으로 폴더 이름 검색 (내 폴더 + 접근 가능한 외부 클라우드)
+     *
+     * @param userId 사용자 ID
+     * @param input  검색어
+     * @return 검색된 폴더 리스트
+     */
     public List<FolderSearchResponseDTO> searchFolder(Long userId, String input) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -364,32 +436,25 @@ public class FolderService {
         List<FolderSearchResponseDTO> folders = new ArrayList<>();
         Set<Long> addedFolderIds = new HashSet<>();
 
-        // 🔹 내 폴더 검색
-        List<Folder> folderList =
-                folderRepository.findAllByNameContainingIgnoreCaseAndIsDeletedFalseAndUser(input, user);
-
+        List<Folder> folderList = folderRepository.findAllByNameContainingIgnoreCaseAndIsDeletedFalseAndUser(input, user);
         for (Folder folder : folderList) {
             addedFolderIds.add(folder.getId());
         }
 
-        // 🔹 다른 사용자의 CLOUD 폴더 중 접근 가능한 것만
-        List<Folder> externalFolders =
-                folderRepository.searchExternalCloudFolders(input, user);
-
+        List<Folder> externalFolders = folderRepository.searchExternalCloudFolders(input, user);
         for (Folder folder : externalFolders) {
             List<FolderAccess> accesses = folderAccessRepository.findAllByFolder(folder);
             for (FolderAccess access : accesses) {
                 if (access.getUser().equals(user) && !addedFolderIds.contains(folder.getId())) {
                     folderList.add(folder);
                     addedFolderIds.add(folder.getId());
-                    break; // 한 번 추가되면 더 이상 확인할 필요 없음
+                    break;
                 }
             }
         }
 
-        // 🔹 DTO 변환
         for (Folder folder : folderList) {
-            if (folder.getParentFolder() == null) continue; // 예외 처리
+            if (folder.getParentFolder() == null) continue;
             folders.add(FolderSearchResponseDTO.builder()
                     .folderId(folder.getId())
                     .folderName(folder.getName())

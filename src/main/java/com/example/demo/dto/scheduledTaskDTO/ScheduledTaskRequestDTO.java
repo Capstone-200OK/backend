@@ -1,10 +1,10 @@
 package com.example.demo.dto.scheduledTaskDTO;
 
-import com.example.demo.entity.ScheduleInterval;
 import com.example.demo.entity.Criteria;
-import java.time.LocalDateTime;
+import com.example.demo.entity.ScheduleInterval;
+import lombok.Data;
 
-import lombok.*;
+import java.time.LocalDateTime;
 
 @Data
 public class ScheduledTaskRequestDTO {
