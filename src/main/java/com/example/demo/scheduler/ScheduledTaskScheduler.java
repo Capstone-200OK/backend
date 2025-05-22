@@ -57,7 +57,9 @@ public class ScheduledTaskScheduler {
                         "destinationFolderId", destinationFolder.getId(),
                         "userId", task.getUser().getId(),
                         "output_path", outputPath,
-                        "isScheduled", isScheduled
+                        "isScheduled", isScheduled,
+                        "isMaintain", task.getIsMaintain(),
+                        "fileNameChange", task.getFileNameChange()
                 );
 
                 // HTTP 요청 헤더 설정
@@ -73,7 +75,7 @@ public class ScheduledTaskScheduler {
                 // WebSocket을 통한 사용자 알림 전송
                 Map<String, Object> payload = Map.of(
                         "userId", task.getUser().getId(),
-                        "message", String.format("Folder '%s' has been moved to '%s'.",
+                        "message", String.format("예약한 '%s' 폴더에서 '%s' 폴더로 자동 정리 되었습니다",
                                 previousFolder.getName(), destinationFolder.getName())
                 );
                 ObjectMapper objectMapper = new ObjectMapper();

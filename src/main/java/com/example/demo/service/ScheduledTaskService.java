@@ -49,6 +49,8 @@ public class ScheduledTaskService {
                 .criteria(scheduledTaskRequestDTO.getCriteria())
                 .interval(scheduledTaskRequestDTO.getInterval())
                 .nextExecuted(scheduledTaskRequestDTO.getNextExecuted())
+                .isMaintain(scheduledTaskRequestDTO.getIsMaintain())
+                .fileNameChange(scheduledTaskRequestDTO.getFileNameChange())
                 .build();
 
         scheduledTaskRepository.save(scheduledTask);
