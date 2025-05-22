@@ -75,7 +75,7 @@ public class ScheduledTaskScheduler {
                 // WebSocket을 통한 사용자 알림 전송
                 Map<String, Object> payload = Map.of(
                         "userId", task.getUser().getId(),
-                        "message", String.format("예약한 '%s' 폴더에서 '%s' 폴더로 자동 정리 되었습니다",
+                        "message", String.format("예약한 '%s' 폴더에서 '%s' 폴더로\n자동 정리 되었습니다",
                                 previousFolder.getName(), destinationFolder.getName())
                 );
                 ObjectMapper objectMapper = new ObjectMapper();
