@@ -37,6 +37,12 @@ public class ScheduledTask {
     @Column(name = "`interval`", nullable = false)
     private ScheduleInterval interval;
 
+    @Builder.Default
+    private Boolean isMaintain = false;
+
+    @Builder.Default
+    private Boolean fileNameChange = false;
+
     private LocalDateTime nextExecuted;
 }
 
