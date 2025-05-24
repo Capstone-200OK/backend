@@ -60,7 +60,7 @@ public interface FolderRepository extends JpaRepository<Folder, Long> {
      * @param name 폴더 이름
      * @return 존재 여부
      */
-    boolean existsByParentFolderIdAndNameAndIsDeletedFalse(Long parentFolderId, String name);
+    boolean existsByUserIdAndParentFolderIdAndNameAndIsDeletedFalse(Long userId, Long parentFolderId, String name);
 
     /**
      * 동일 부모 폴더 내 동일 이름 + 다른 ID 폴더 존재 여부 확인 (이름 중복 체크용)

@@ -14,5 +14,7 @@ public class ScheduledTaskRequestDTO {
     private Criteria criteria;
     private ScheduleInterval interval;
     private LocalDateTime nextExecuted;
+    private Boolean isMaintain;
+    private Boolean fileNameChange;
 }
 
