@@ -241,7 +241,7 @@ public class FolderService {
                 newName = baseName + "(" + counter++ + ")";
             }
         } else {
-            while (folderRepository.existsByParentFolderIdAndNameAndIsDeletedFalse(parentFolderId, newName)) {
+            while (folderRepository.existsByUserIdAndParentFolderIsNullAndNameAndIsDeletedFalse(parentFolderId, newName)) {
                 newName = baseName + "(" + counter++ + ")";
             }
         }
