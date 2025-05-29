@@ -34,7 +34,7 @@ public class ScheduledTaskScheduler {
      * 예약 작업을 주기적으로 실행하는 스케줄러
      * 매 시간 정각마다 실행됨
      */
-    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 0 0 * * *")
     @Transactional
     public void executeScheduledTasks() {
         LocalDateTime now = LocalDateTime.now();

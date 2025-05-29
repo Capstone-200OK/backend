@@ -123,7 +123,12 @@ public class SortingHistoryService {
             int suffix = 1;
 
             // 중복 이름 방지
-            while (folderRepository.existsByParentFolderIdAndNameAndIdNotAndIsDeletedFalse(parentFolder.getId(), newName, folder.getId())) {
+//            while (folderRepository.existsByParentFolderIdAndNameAndIdNotAndIsDeletedFalse(parentFolder.getId(), newName, folder.getId())) {
+//                System.out.println(parentFolder.getId() +", "+ newName+", "+folder.getId());
+//                newName = originalName + "(" + suffix++ + ")";
+//            }
+            while (folderRepository.existsByUserIdAndParentFolderIdAndNameAndIsDeletedFalse(folder.getUser().getId(), parentFolder.getId(), newName)) {
+                System.out.println(parentFolder.getId() +", "+ newName+", "+folder.getId());
                 newName = originalName + "(" + suffix++ + ")";
             }
 
@@ -314,8 +319,8 @@ public class SortingHistoryService {
             Folder currRoot = folderAccessService.findTopAccessibleRoot(user, currentFolder);
 
             // 2. 각각 fullPath 만들기 (CloudRoot/부터 시작)
-            String prevPath = "CloudRoot/" + buildUserVisiblePath(previousFolder, prevRoot) + "/" + file.getName();
-            String currPath = "CloudRoot/" + buildUserVisiblePath(currentFolder, currRoot) + "/" + file.getName();
+            String prevPath = previousFolder.getFolderType()+ "/" + buildUserVisiblePath(previousFolder, prevRoot) + "/" + file.getName();
+            String currPath = currentFolder.getFolderType() + "/" + buildUserVisiblePath(currentFolder, currRoot) + "/" + file.getName();
 
             return new SortingHistoryFileResponseDTO(
                     previousFolder.getName(),
