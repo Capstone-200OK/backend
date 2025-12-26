@@ -103,13 +103,15 @@ public class FileController {
     /**
      * 클라이언트에 전달할 파일 DTO
      */
-    public record FileDTO(Long id, String name, Long folderId, Boolean isImportant) {
+    public record FileDTO(Long id, String name, Long folderId, Boolean isImportant, String fileUrl, String thumbnailUrl) {
         public static FileDTO fromEntity(File file) {
             return new FileDTO(
                     file.getId(),
                     file.getName(),
                     file.getFolder() == null ? null : file.getFolder().getId(),
-                    file.getIsImportant()
+                    file.getIsImportant(),
+                    file.getFileUrl(),
+                    file.getFileThumbUrl()
             );
         }
     }
