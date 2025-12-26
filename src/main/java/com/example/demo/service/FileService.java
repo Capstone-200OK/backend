@@ -29,6 +29,7 @@ public class FileService {
     private final FolderRepository folderRepository;
     private final FolderAccessService folderAccessService;
     private final S3Uploader s3Uploader;
+    private final ThumbnailQueuePublisher thumbnailQueuePublisher;
 
     @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
@@ -67,12 +68,13 @@ public class FileService {
         // S3에 파일 업로드
         String s3Url = s3Uploader.upload(multipartFile, bucket, "uploads");
 
-        // 썸네일 생성 요청
+        /*// 썸네일 생성 요청
         RestTemplate restTemplate = new RestTemplate();
+        System.out.println("finalName: " + finalName);
         Map<String, String> request = Map.of("fileUrl", s3Url, "fileName", finalName);
         ResponseEntity<Map> response = restTemplate.postForEntity("http://localhost:5050/api/thumbnail", request, Map.class);
         String thumbnailUrl = (String) response.getBody().get("thumbnailUrl");
-
+*/
         // 파일 엔티티 생성 및 저장
         File file = File.builder()
                 .user(user)
@@ -83,10 +85,15 @@ public class FileService {
                 .size(fileRequestDTO.getSize())
                 .isDeleted(false)
                 .fileUrl(s3Url)
-                .fileThumbUrl(thumbnailUrl)
+                .fileThumbUrl(null)
                 .build();
 
-        return fileRepository.save(file);
+        File saved = fileRepository.save(file);
+
+        // 큐 방행
+        thumbnailQueuePublisher.publish(saved.getId(), saved.getFileUrl(), saved.getName());
+
+        return saved;
     }
 
     // 루트 개인 폴더인지 확인
